@@ -4,7 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="1bd86d45-7176-4e1a-a895-630f8c528a69" name="Changes" comment="2024/12/21 22:46" />
+    <list default="true" id="1bd86d45-7176-4e1a-a895-630f8c528a69" name="Changes" comment="2024/12/21 22:47">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/부동산매물.py" beforeDir="false" afterPath="$PROJECT_DIR$/부동산매물.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -135,13 +138,38 @@
       <option name="project" value="LOCAL" />
       <updated>1734788818029</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="2024/12/21 22:46">
+      <option name="closed" value="true" />
+      <created>1734788855619</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1734788855619</updated>
+    </task>
+    <task id="LOCAL-00007" summary="2024/12/21 22:47">
+      <option name="closed" value="true" />
+      <created>1734788869837</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1734788869837</updated>
+    </task>
+    <task id="LOCAL-00008" summary="2024/12/21 22:47">
+      <option name="closed" value="true" />
+      <created>1734788888044</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1734788888044</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="2024/12/21 21:16: 네이버 부동산 매물 수집 초기코드" />
     <MESSAGE value="2024/12/21 22:46: 네이버 부동산 매물 수집 초기코드" />
     <MESSAGE value="2024/12/21 22:46" />
-    <option name="LAST_COMMIT_MESSAGE" value="2024/12/21 22:46" />
+    <MESSAGE value="2024/12/21 22:47" />
+    <option name="LAST_COMMIT_MESSAGE" value="2024/12/21 22:47" />
   </component>
 </project>
