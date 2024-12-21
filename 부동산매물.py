@@ -58,7 +58,7 @@ print(extractList(1))
 #
 #     if df.shape[0] > 0:
 #         collectDf.append(df)
-#dd
+#텡시ㅡ이르나이리넘ㄹ이ㅓ
 #     else:
 #         print(i)
 #         break
