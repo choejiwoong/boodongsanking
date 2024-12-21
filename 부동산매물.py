@@ -15,10 +15,10 @@ lon = main_url.split('/')[4].split(':')[1] #경도
 z = main_url.split('/')[4].split(':')[2] #축적
 cortarNo = main_url.split('/')[4].split(':')[3] #지역코드
 # mapping 고정값
-btm = float(lat) - 0.0538928
-lft = float(lon) - 0.3475542
-top = float(lat) + 0.0538928
-rgt = float(lon) + 0.3475542
+btm = float(lat) - 0.1221837
+top = float(lat) + 0.1221837
+lft = float(lon) - 0.2343178
+rgt = float(lon) + 0.2343178
 buildingType = 'APT' #아파트
 
 keyList = ['atclNo', 'atclNm', 'rletTpNm', 'tradTpNm', 'bildNm', 'flrInfo', 'prc', 'sameAddrMaxPrc', 'sameAddrMinPrc', 'sameAddrCnt', 'direction', 'spc1', 'spc2']
