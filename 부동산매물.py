@@ -49,7 +49,7 @@ def extractList(page):
 print(extractList(1))
 
 #
-# ###########
+# #################
 # collectDf = []
 #
 # for i in range(1, 1000):
