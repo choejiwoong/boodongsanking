@@ -5,12 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1bd86d45-7176-4e1a-a895-630f8c528a69" name="Changes" comment="2024/12/21 23:48: 완전 초기본. 다음 야간에 하자~~">
-      <change afterPath="$PROJECT_DIR$/naverMaemool/main.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/naverMaemool/real_estate.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/naverMaemool/sigungu.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/부동산매물.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/naverMaemool/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/naverMaemool/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/naverMaemool/real_estate.py" beforeDir="false" afterPath="$PROJECT_DIR$/naverMaemool/real_estate.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/naverMaemool/sigungu.py" beforeDir="false" afterPath="$PROJECT_DIR$/naverMaemool/sigungu.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -44,6 +44,9 @@
     &quot;accountId&quot;: &quot;81598a81-a588-425c-a4a0-6a270455af32&quot;
   }
 }</component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 1
 }</component>
@@ -52,37 +55,37 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Python.20250101_부동산매물.executor": "Run",
-    "Python.main.executor": "Run",
-    "Python.real_estate (1).executor": "Debug",
-    "Python.sigunguComplex (1).executor": "Run",
-    "Python.국토교통부 실거래가.executor": "Run",
-    "Python.부동산매물.executor": "Run",
-    "Python.부산 시군구.executor": "Run",
-    "Python.부산 시군구별 아파트리스트.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "master"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Python.20250101_부동산매물.executor&quot;: &quot;Run&quot;,
+    &quot;Python.main.executor&quot;: &quot;Run&quot;,
+    &quot;Python.real_estate (1).executor&quot;: &quot;Debug&quot;,
+    &quot;Python.sigunguComplex (1).executor&quot;: &quot;Run&quot;,
+    &quot;Python.국토교통부 실거래가.executor&quot;: &quot;Run&quot;,
+    &quot;Python.부동산매물.executor&quot;: &quot;Run&quot;,
+    &quot;Python.부산 시군구.executor&quot;: &quot;Run&quot;,
+    &quot;Python.부산 시군구별 아파트리스트.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/cbbtng/PycharmProjects/boodongsanking&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\user\PycharmProjects\PythonProject\네이버 매물" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.main">
+  <component name="RunManager" selected="Python.sigungu (1)">
     <configuration name="부동산매물" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
       <module name="PythonProject" />
-      <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="SDK_NAME" value="Python 3.12 (PythonProject)" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
       <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
@@ -97,19 +100,19 @@
       <method v="2" />
     </configuration>
     <configuration name="main" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="PythonProject" />
-      <option name="ENV_FILES" value="" />
+      <module name="boodongsanking" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
-      <option name="SDK_HOME" value="" />
+      <option name="SDK_HOME" value="C:\Users\cbbtng\PycharmProjects\boodongsanking\venv\Scripts\python.exe" />
+      <option name="SDK_NAME" value="Python 3.12 (boodongsanking)" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
+      <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="C:\Users\user\PycharmProjects\PythonProject\네이버 매물\main.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/../../../user/PycharmProjects/PythonProject/네이버 매물/main.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -118,20 +121,19 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="real_estate" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="PythonProject" />
-      <option name="ENV_FILES" value="" />
+    <configuration name="sigungu (1)" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="boodongsanking" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/naverMaemool" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="C:\Users\user\PycharmProjects\PythonProject\네이버 매물\real_estate.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/naverMaemool/sigungu.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -142,7 +144,6 @@
     </configuration>
     <configuration name="sigungu" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="PythonProject" />
-      <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
@@ -164,7 +165,6 @@
     </configuration>
     <configuration name="sigunguComplex (1)" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="PythonProject" />
-      <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
@@ -186,7 +186,6 @@
     </configuration>
     <configuration name="sigunguComplex" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="PythonProject" />
-      <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
@@ -206,10 +205,18 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <list>
+      <item itemvalue="Python.부동산매물" />
+      <item itemvalue="Python.sigungu (1)" />
+      <item itemvalue="Python.main" />
+      <item itemvalue="Python.sigungu" />
+      <item itemvalue="Python.sigunguComplex" />
+      <item itemvalue="Python.sigunguComplex (1)" />
+    </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.sigungu (1)" />
         <item itemvalue="Python.main" />
-        <item itemvalue="Python.real_estate (1)" />
         <item itemvalue="Python.sigunguComplex (1)" />
         <item itemvalue="Python.sigunguComplex" />
         <item itemvalue="Python.sigungu" />
