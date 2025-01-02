@@ -23,9 +23,13 @@ if "dataframe" not in st.session_state:
 
 # 콤보박스 콜백 함수
 def update_region():
-    st.session_state.si_combo = st.session_state.si_select
-    st.session_state.gungu_combo = st.session_state.gungu_select
-    st.session_state.dataframe = None  # 데이터 초기화
+    if st.session_state.si_combo != st.session_state.si_select:
+        st.session_state.si_combo = st.session_state.si_select
+    if st.session_state.gungu_combo != st.session_state.gungu_select:
+        st.session_state.gungu_combo = st.session_state.gungu_select
+    # 데이터 초기화 (필요한 경우)
+    if "dataframe" in st.session_state:
+        del st.session_state.dataframe
 
 # 시 콤보 박스: 변경 시 새로고침 대신 콜백
 si_combo = st.selectbox(
@@ -81,18 +85,17 @@ if st.session_state.dataframe is not None:
     # 면적이 문자열로 되어 있을 경우 숫자로 변환
     df["면적"] = pd.to_numeric(df["면적"], errors="coerce")  # 변환 불가능한 값은 NaN으로 처리
     df["면적_평"] = round(df["면적"] / 3.3)  # 면적을 평 단위로 변환
-    # # '면적' 컬럼을 "면적(평)" 형식으로 변경
-    # df["면적"] = df["면적"].apply(lambda x: f"{x/3.3:.1f}평 ({x:.2f}m²)" if pd.notnull(x) else "N/A")
-    # 면적 범위 선택: '0~24평', '24~40평', '40평 이상'
+    # 면적 범위 선택: '~24평', '24평~34평', '34평~40평', '40평~'
     area_range = [
-        "0~24평",
-        "24~40평",
-        "40평 이상",
+        "~24평",
+        "24평~30평",
+        '30평~40평',
+        "40평~",
     ]
     area_filter = st.selectbox(
         "면적 범위 선택 (평):",
         area_range,
-        index=0,
+        index=area_range.index("24평~30평"), # default
         key="area_filter",
     )
 
@@ -105,16 +108,21 @@ if st.session_state.dataframe is not None:
     if apt_filter.strip():  # 공백을 제거하고 입력값이 있는 경우만 필터링
         filtered_df = filtered_df[filtered_df["아파트명"].str.contains(apt_filter.strip(), case=False, na=False)]
     # 면적 범위에 따라 필터링
-    if area_filter == "0~24평":
+    if area_filter == "~24평":
         filtered_df = filtered_df[(filtered_df["면적_평"] >= 0) & (filtered_df["면적_평"] < 24)]
-    elif area_filter == "24~40평":
-        filtered_df = filtered_df[(filtered_df["면적_평"] >= 24) & (filtered_df["면적_평"] < 40)]
-    elif area_filter == "40평 이상":
+    elif area_filter == "24평~30평":
+        filtered_df = filtered_df[(filtered_df["면적_평"] >= 24) & (filtered_df["면적_평"] < 30)]
+    elif area_filter == "30평~40평":
+        filtered_df = filtered_df[(filtered_df["면적_평"] >= 30) & (filtered_df["면적_평"] < 40)]
+    elif area_filter == "40평~":
         filtered_df = filtered_df[filtered_df["면적_평"] >= 40]
+    # '면적' 컬럼을 "면적(평)" 형식으로 변경
+    filtered_df["면적"] = filtered_df["면적"].apply(lambda x: f"{x/3.3:.1f}평 ({x:.2f}m²)" if pd.notnull(x) else "N/A")
+    # '면적_평' 컬럼 삭제
+    filtered_df.drop(columns=['면적_평'], inplace=True)
 
     # 필터링된 데이터프레임 표시
     st.dataframe(filtered_df, use_container_width=True, height=1000)
-    
     # 데이터 개수 표시
     st.write(f"전체 데이터 수: {len(filtered_df)}개")
 else:

@@ -50,13 +50,13 @@ class RealEstateFetcher:
         self.params = {
             'rletTpCd': 'APT:ABYG:JGC', # APT: 아파트, ABYG: 아파트분양권, JGC: 재건축
             'tradTpCd': 'A1:B1', # A1: 매매, B1: 전세
-            'z': '13', # 축척
+            'z': '15', # 축척
             'lat': region_data['centerLat'], # 위도
             'lon': region_data['centerLon'], # 경도
-            'btm': region_data['centerLat'] - 0.25, # 밑쪽 끝 위도
-            'lft': region_data['centerLon'] - 0.25, # 왼쪽 끝 경도
-            'top': region_data['centerLat'] + 0.25, # 위쪽 끝 위도
-            'rgt': region_data['centerLon'] + 0.25, # 오른쪽 끝 경도
+            'btm': region_data['centerLat'] - 0.10, # 밑쪽 끝 위도
+            'lft': region_data['centerLon'] - 0.08, # 왼쪽 끝 경도
+            'top': region_data['centerLat'] + 0.10, # 위쪽 끝 위도
+            'rgt': region_data['centerLon'] + 0.08, # 오른쪽 끝 경도
             'showR0': '',
             'cortarNo': region_data['cortarNo'],
             'page': 1,
@@ -89,9 +89,7 @@ class RealEstateFetcher:
         return all_articles
 
     def get_dataframe(self):
-        # get_all_articles 메서드를 비동기적으로 호출
         all_articles = self.get_all_articles()
-
         if all_articles:
             data = [{
                 "매물번호": article.get("atclNo"),
