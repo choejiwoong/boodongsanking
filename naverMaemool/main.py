@@ -42,7 +42,7 @@ si_combo = st.selectbox(
 # 군구 콤보 박스: 변경 시 새로고침 대신 콜백
 gungu_combo = st.selectbox(
     "군구를 선택해 주세요.",
-    ["선택 안함"] + region_info.get_gungu_list(si_name=si_combo),
+    ["선택 안함"] + list(region_info.get_gungu_dict(si_name=si_combo).keys()),
     index=0,
     key="gungu_select",
     on_change=update_region,  # 콜백 연결
@@ -50,7 +50,7 @@ gungu_combo = st.selectbox(
 
 # 데이터 가져오기
 async def fetch_data(si_name, gungu_name):
-    region_data = region_info.get_gungu_data(si_name, gungu_name)
+    region_data = region_info.get_dong_list(si_name, gungu_name)
     fetcher = RealEstateFetcher(region_data=region_data)
     df = fetcher.get_dataframe()
     return df
@@ -117,7 +117,7 @@ if st.session_state.dataframe is not None:
     elif area_filter == "40평~":
         filtered_df = filtered_df[filtered_df["면적_평"] >= 40]
     # '면적' 컬럼을 "면적(평)" 형식으로 변경
-    filtered_df["면적"] = filtered_df["면적"].apply(lambda x: f"{x/3.3:.1f}평 ({x:.2f}m²)" if pd.notnull(x) else "N/A")
+    filtered_df["면적"] = filtered_df["면적"].apply(lambda x: f"{x/3.3:.0f}평 ({x:.2f}m²)" if pd.notnull(x) else "N/A")
     # '면적_평' 컬럼 삭제
     filtered_df.drop(columns=['면적_평'], inplace=True)
 

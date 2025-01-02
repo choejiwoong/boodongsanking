@@ -20,23 +20,23 @@ class RegionInfo:
         url = 'https://m.land.naver.com/map/getRegionList?cortarNo=0000000000'
         return {region['CortarNm']: region['CortarNo'] for region in self._get_json(url).get('result', {}).get('list', [])}
 
-    def get_gungu_list(self, si_name):
+    def get_gungu_dict(self, si_name):
         si_codes = self.get_si_dict()
         base_code = si_codes.get(si_name)
+        if not base_code:
+            return {}
+        url = f'https://m.land.naver.com/map/getRegionList?cortarNo={base_code}'
+        return {region['CortarNm']: region['CortarNo'] for region in self._get_json(url).get('result', {}).get('list', [])}
+
+    def get_dong_list(self, si_name, gungu_name):
+        gungu_codes = self.get_gungu_dict(si_name)
+        base_code = gungu_codes.get(gungu_name)
         if not base_code:
             return []
-        url = f'https://new.land.naver.com/api/regions/list?cortarNo={base_code}'
-        return [region['cortarName'] for region in self._get_json(url).get('regionList', [])]
-
-    def get_gungu_data(self, si_name, gungu_name):
-        si_codes = self.get_si_dict()
-        base_code = si_codes.get(si_name)
-        if not base_code:
-            return None
-        url = f'https://new.land.naver.com/api/regions/list?cortarNo={base_code}'
-        for region in self._get_json(url).get('regionList', []):
-            if region['cortarName'] == gungu_name:
-                return {
-                    'cortarNo': region['cortarNo'], 'centerLat': region['centerLat'], 'centerLon': region['centerLon']
-                }
-        return None
+        url = f'https://m.land.naver.com/map/getRegionList?cortarNo={base_code}'
+        return [{
+            'CortarNm': region['CortarNm'],
+            'CortarNo': region['CortarNo'],
+            'MapXCrdn': region['MapXCrdn'],
+            'MapYCrdn': region['MapYCrdn']
+        } for region in self._get_json(url).get('result', {}).get('list', [])]

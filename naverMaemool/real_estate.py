@@ -47,26 +47,27 @@ class RealEstateFetcher:
             'sec-ch-ua-platform': '"Windows"',
         }
 
-        self.params = {
+        # region_data는 리스트 형태로 받아올 수 있도록 처리
+        self.region_data = region_data if region_data is not None else []
+
+    def fetch_real_estate_data(self, page, region):
+        params = {
             'rletTpCd': 'APT:ABYG:JGC', # APT: 아파트, ABYG: 아파트분양권, JGC: 재건축
             'tradTpCd': 'A1:B1', # A1: 매매, B1: 전세
-            'z': '15', # 축척
-            'lat': region_data['centerLat'], # 위도
-            'lon': region_data['centerLon'], # 경도
-            'btm': region_data['centerLat'] - 0.10, # 밑쪽 끝 위도
-            'lft': region_data['centerLon'] - 0.08, # 왼쪽 끝 경도
-            'top': region_data['centerLat'] + 0.10, # 위쪽 끝 위도
-            'rgt': region_data['centerLon'] + 0.08, # 오른쪽 끝 경도
+            'z': '8', # 축척
+            'lat': float(region['MapYCrdn']), # 위도
+            'lon': float(region['MapXCrdn']), # 경도
+            'btm': float(region['MapYCrdn']) - 0.1, # 밑쪽 끝 위도
+            'lft': float(region['MapXCrdn']) - 0.1, # 왼쪽 끝 경도
+            'top': float(region['MapYCrdn']) + 0.1, # 위쪽 끝 위도
+            'rgt': float(region['MapXCrdn']) + 0.1, # 오른쪽 끝 경도
             'showR0': '',
-            'cortarNo': region_data['cortarNo'],
-            'page': 1,
+            'cortarNo': region['CortarNo'],
+            'page': page,
         }
-
-    def fetch_real_estate_data(self, page):
         # 페이지 값을 동적으로 설정
-        self.params['page'] = page
         url = 'https://m.land.naver.com/cluster/ajax/articleList'
-        response = requests.get(url, cookies=self.cookies, headers=self.headers, params=self.params, verify=False)
+        response = requests.get(url, cookies=self.cookies, headers=self.headers, params=params, verify=False)
         if response.status_code == 200:
             return response.json().get("body", [])
         elif response.status_code == 307:
@@ -78,14 +79,15 @@ class RealEstateFetcher:
 
     def get_all_articles(self):
         all_articles = []
-        page = 1
-        while True:
-            articles = self.fetch_real_estate_data(page)
-            if not articles:
-                break
-            all_articles.extend(articles)
-            page += 1
-            # time.sleep(2)
+        for region in self.region_data:
+            page = 1
+            while True:
+                articles = self.fetch_real_estate_data(page, region)
+                if not articles:
+                    break
+                all_articles.extend(articles)
+                page += 1
+                # time.sleep(2)
         return all_articles
 
     def get_dataframe(self):
@@ -106,6 +108,8 @@ class RealEstateFetcher:
             } for article in all_articles]
             # DataFrame 생성
             df = pd.DataFrame(data)
+            # 컬럼명에서 공백 제거
+            df.columns = df.columns.str.replace(" ", "")
             # # 중복값 제거 (매물번호 기준)
             # df = df.drop_duplicates(subset=["매물번호"], keep="first")
             return df
