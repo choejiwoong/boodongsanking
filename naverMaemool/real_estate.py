@@ -101,7 +101,7 @@ class RealEstateFetcher:
                 "동": article.get("bildNm"),
                 "층": article.get("flrInfo"),
                 "등록일자": article.get("atclCfmYmd"),
-                "면적": article.get("spc2"),
+                "면적": article.get("spc1"),
                 "방향": article.get("direction"),
                 "태그": article.get("tagList"),
                 "설명": article.get("atclFetrDesc"),
