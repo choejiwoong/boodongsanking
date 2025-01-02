@@ -17,3 +17,4 @@ cortarNo이 다르다는 걸 알게 됨... -> 동까지 크롤링하는 코드�
 https://m.land.naver.com/complex/ajax/complexListByCortarNo?cortarNo=2647010200
 여기에서 아파트 매물 정보를 받는 대대적인 개편을 해야할듯
 https://fin.land.naver.com/front-api/v1/complex/article/list?complexNumber=124249&userChannelType=PC&page=0
+자꾸 거제동 아파트만 뜨지 왜...

@@ -1,7 +1,6 @@
 import asyncio
 import streamlit as st
 from sigungu import RegionInfo
-from real_estate import RealEstateFetcher
 import pandas as pd
 
 # RegionInfo 객체 생성
@@ -39,6 +38,7 @@ si_combo = st.selectbox(
     key="si_select",
     on_change=update_region,  # 콜백 연결
 )
+
 # 군구 콤보 박스: 변경 시 새로고침 대신 콜백
 gungu_combo = st.selectbox(
     "군구를 선택해 주세요.",
@@ -48,33 +48,34 @@ gungu_combo = st.selectbox(
     on_change=update_region,  # 콜백 연결
 )
 
-# 데이터 가져오기
-async def fetch_data(si_name, gungu_name):
-    region_data = region_info.get_dong_list(si_name, gungu_name)
-    fetcher = RealEstateFetcher(region_data=region_data)
-    df = fetcher.get_dataframe()
-    return df
-
 # 매물 목록 불러오기 버튼
 if st.button("매물 목록 불러오기"):
     if si_combo != "선택 안함" and gungu_combo != "선택 안함":
         with st.spinner("Fetching data..."):
-            st.session_state.dataframe = asyncio.run(fetch_data(si_combo, gungu_combo))
-            if st.session_state.dataframe is not None:
-                st.success("데이터 로드 완료!")
+            # 아파트 목록 가져오기
+            apt_list_dict = region_info.get_apt_list_dict(si_combo, gungu_combo)
+            all_apartment_data = []  # 모든 아파트 데이터를 저장할 리스트
+
+            # 각 아파트에 대해 매물 데이터를 가져오기
+            for apt_name in apt_list_dict.values():
+                apartment_data = region_info.get_apt_maemool_dict(si_combo, gungu_combo, apt_name)
+                parsed_data = region_info.parse_articles(response=apartment_data)
+                if parsed_data:  # 데이터가 비어있지 않은 경우 추가
+                    all_apartment_data.extend(parsed_data)
+
+            # 모든 데이터를 하나의 DataFrame으로 결합
+            if all_apartment_data:
+                combined_df = pd.DataFrame(all_apartment_data)
+                st.session_state.dataframe = combined_df
+                st.success("모든 데이터를 로드 완료!")
             else:
-                st.write("데이터 로드에 실패했습니다.")
+                st.write("데이터를 불러올 수 없습니다. 다시 시도해주세요.")
 
 # 필터 및 데이터 표시
 if st.session_state.dataframe is not None:
     df = st.session_state.dataframe
 
     # 필터 선택 UI
-    trad_tp_filter = st.selectbox(
-        "매매/전세 선택:",
-        ["전체"] + df["매매/전세"].unique().tolist(),
-        key="trad_tp_filter",
-    )
     apt_filter = st.text_input(
         "아파트 이름 입력:",
         "",  # 기본값을 공백으로 설정
@@ -95,15 +96,12 @@ if st.session_state.dataframe is not None:
     area_filter = st.selectbox(
         "면적 범위 선택 (평):",
         area_range,
-        index=area_range.index("24평~30평"), # default
+        index=area_range.index("24평~30평"),  # default
         key="area_filter",
     )
 
     # 필터링된 데이터프레임
-    # 매매/전세 필터링
     filtered_df = df.copy()
-    if trad_tp_filter != "전체":
-        filtered_df = filtered_df[filtered_df["매매/전세"] == trad_tp_filter]
     # 아파트명 필터링
     if apt_filter.strip():  # 공백을 제거하고 입력값이 있는 경우만 필터링
         filtered_df = filtered_df[filtered_df["아파트명"].str.contains(apt_filter.strip(), case=False, na=False)]
