@@ -1,9 +1,6 @@
 import requests
-import warnings
-from urllib3.exceptions import InsecureRequestWarning
-import time
 
-class RegionInfo:
+class CrawlBot:
     def __init__(self):
         self.cookies = {
             'NNB': 'QBJH3FYZZ44WM', 'NaverSuggestUse': 'use%26unuse', 'ASID': 'd372c8ac0000018f6ca118b20000004b',
@@ -14,9 +11,6 @@ class RegionInfo:
             'Accept': '*/*', 'Accept-Language': 'ko-KR', 'User-Agent': 'Mozilla/5.0',
             'Referer': 'https://new.land.naver.com/search'
         }
-
-    # # HTTPS 경고 숨기기
-    # warnings.simplefilter("ignore", InsecureRequestWarning)
 
     def _get_json(self, url):
         response = requests.get(url, cookies=self.cookies, headers=self.headers, verify=False)
@@ -62,27 +56,27 @@ class RegionInfo:
         return apt_list_dict
 
     # 아파트 매물 정보 dict
-    def get_apt_maemool_dict(self, si_name, gungu_name, apt_name):
-        apt_list_dict = self.get_apt_list_dict(si_name, gungu_name)
-        print(apt_list_dict)
+    def get_apt_maemool_dict(self, apt_list_dict, update_progress_callback):
         all_results = []  # 모든 페이지에서 가져온 결과를 저장할 리스트
-        for key, value in apt_list_dict.items():
-            # if apt_name in value:  # apt_name이 value의 일부와 일치하면
-                page = 0
-                while True:
-                    # 페이지별 URL
-                    url = f"https://fin.land.naver.com/front-api/v1/complex/article/list?complexNumber={key}&tradeTypes=A1&userChannelType=PC&page={page}"
-                    # JSON 데이터 가져오기
-                    response = self._get_json(url)
-                    # 결과 데이터 추출
-                    results = response.get('result', {}).get('list', [])
-                    # 결과가 없으면 반복 종료
-                    if not results:
-                        break
-                    # 결과가 있으면 all_results에 추가
-                    all_results.extend(results)
-                    # 다음 페이지로 이동
-                    page += 1
+        total_apartments = len(apt_list_dict)
+        for current_index, (key, value) in enumerate(apt_list_dict.items()):
+            page = 0
+            while True:
+                # 페이지별 URL
+                url = f"https://fin.land.naver.com/front-api/v1/complex/article/list?complexNumber={key}&tradeTypes=A1&userChannelType=PC&page={page}"
+                # JSON 데이터 가져오기
+                response = self._get_json(url)
+                # 결과 데이터 추출
+                results = response.get('result', {}).get('list', [])
+                # 결과가 없으면 반복 종료
+                if not results:
+                    break
+                # 결과가 있으면 all_results에 추가
+                all_results.extend(results)
+                # 다음 페이지로 이동
+                page += 1
+                # 진행 상태 업데이트
+                update_progress_callback(current_index / total_apartments)  # 비율로 진행 상태 전달
         return all_results if all_results else []
 
     def parse_articles(self, response):
