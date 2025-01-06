@@ -1,14 +1,31 @@
-# 공공데이터포털: https://www.data.go.kr/index.do
-# 참고하기: https://www.youtube.com/watch?v=e1N3PVwRV_U&list=PLTLlOtUtSDVkBFxVC5cgeZXpE7-4FoL4X
+### 대충 완료함
 
-import requests
-url = 'https://apis.data.go.kr/1613000/RTMSDataSvcAptTrade/getRTMSDataSvcAptTrade'
-params = {
-    'serviceKey': 'uIpKsI5ZLpNqZwMOkFMo1ey%2BiPufiaF57op3k4kt5gQ5u0UozQGi5c5ZmNs3j1HMJtIWXJn75mVEey4B%2BriCHA%3D%3D',
-    'LAWD_CD': '11110',
-    'DEAL_YMD': '202407',
-    'pageNo': '1',
-    'numOfRows': '10',
-}
-res = requests.get(url, params=params, verify=False)
-print(res.text)
+from PublicDataReader import TransactionPrice
+
+service_key = "uIpKsI5ZLpNqZwMOkFMo1ey%2BiPufiaF57op3k4kt5gQ5u0UozQGi5c5ZmNs3j1HMJtIWXJn75mVEey4B%2BriCHA%3D%3D"
+api = TransactionPrice(service_key)
+
+# 기간 내 조회
+df = api.get_data(
+    property_type="아파트",
+    trade_type="매매",
+    sigungu_code="26470", # 부산 연제구
+    start_year_month="202201",
+    end_year_month="202412",
+)
+
+# 각 행에서 필요한 정보를 뽑아서 보기 좋은 이름으로 딕셔너리로 변환
+for index, row in df.iterrows():
+    apartment_info = {
+        "아파트명": row['aptNm'],
+        "거래연도": row['dealYear'],
+        "거래월": row['dealMonth'],
+        "거래일": row['dealDay'],
+        "거래금액": row['dealAmount'],
+        "층수": row['floor'],
+        "거래구분": row['dealingGbn'],
+        "전용면적": row['excluUseAr'],
+        "아파트Seq": row['aptSeq']
+    }
+
+    print(apartment_info)

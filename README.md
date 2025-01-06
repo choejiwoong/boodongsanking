@@ -18,3 +18,4 @@
 #### 2025/01/05
 + [ ] 테스트 한번 해봐야함
 #### what to do next?
+#### Kosis 데이터 쉽게 가져오는 라이브러리: https://wooiljeong.github.io/python/pdr-kosis/ 
