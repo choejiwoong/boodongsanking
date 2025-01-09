@@ -1,4 +1,4 @@
-###### 아직 완료 못함 ㅠㅠㅠㅠ
+###### 반쯤 완료??
 import requests
 
 # Kakao API 키
@@ -131,7 +131,7 @@ def search_department_store(latitude, longitude, sigungu_name):
         for place in places:
             place_id = place['id']
             # 백화점만 필터링
-            if '백화점' in place['place_name'] and place_id not in seen_places and sigungu_name in place['road_address_name']:
+            if '백화점' in place['place_name'] and '백화점' in place['category_name'] and place_id not in seen_places and sigungu_name in place['road_address_name']:
                 seen_places.add(place_id)
                 total_count += 1
                 print(f"백화점 이름: {place['place_name']}")
@@ -170,7 +170,7 @@ def search_places(latitude, longitude, sigungu_name):
             for place in places:
                 place_id = place['id']
                 # 병원 카테고리가 '종합병원'인 경우만 필터링
-                if place['category_name'] == '의료,건강 > 병원 > 종합병원' and place_id not in seen_hospitals and sigungu_name in place['road_address_name']:
+                if (('종합병원' in place['category_name']) or ('대학병원' in place['category_name'])) and place_id not in seen_hospitals and sigungu_name in place['road_address_name']:
                     seen_hospitals.add(place_id)
                     hospital_count += 1
                     print(f"종합병원 이름: {place['place_name']}")
@@ -192,14 +192,14 @@ def search_places(latitude, longitude, sigungu_name):
     starbucks_count = search_starbucks(latitude, longitude, sigungu_name)
 
     # 각 카테고리의 개수를 출력
+    print(f"총 백화점 개수: {department_store_count}")
     print(f"총 대형마트 개수: {mart_count}")
     print(f"총 종합병원 개수: {hospital_count}")
-    print(f"총 백화점 개수: {department_store_count}")
     print(f"총 스타벅스 개수: {starbucks_count}")
 
 
 # 예시: 부산 연제구의 대형마트, 병원, 백화점, 스타벅스 검색
-sgg_name = "부산 해운대구"
+sgg_name = ("부산 부산진구")
 latitude, longitude = get_coordinates_from_sgg(sgg_name)
 
 if latitude and longitude:
