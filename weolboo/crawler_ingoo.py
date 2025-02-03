@@ -2,7 +2,7 @@ import PublicDataReader as pdr
 import streamlit
 from PublicDataReader import Kosis
 import pandas as pd
-from sigunguCode import *
+from crawler_sigungu import *
 from datetime import datetime
 
 
@@ -67,6 +67,7 @@ class AgePopulationAnalysis:
                         data.append({
                             '구분': gwangyeok_name,
                             '연령대': get_age_group(objL2_value),
+                            '연령대숫자': objL2_value,
                             '수치값': value
                         })
                         print({
@@ -92,12 +93,14 @@ class AgePopulationAnalysis:
                         data.append({
                             '구분': gwangyeok_name,
                             '연령대': get_age_group(objL2_value),
+                            '연령대숫자': objL2_value,
                             '수치값': value
                         })
         # 데이터프레임 생성 후 피벗
         result_df = pd.DataFrame(data)
         # 정렬
-        result_df = result_df.sort_values(by=['구분', '연령대'])
+        result_df = result_df.sort_values(by=['연령대숫자'])
+        print(result_df)
         # 수치값을 숫자로 변환 (혹시 남아있는 문자열이 있다면)
         result_df['수치값'] = pd.to_numeric(result_df['수치값'], errors='coerce')
         pivot_df = result_df.pivot_table(index='구분', columns='연령대', values='수치값', aggfunc='sum').reset_index()

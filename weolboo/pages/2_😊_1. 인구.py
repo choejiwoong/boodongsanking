@@ -20,7 +20,9 @@ if 'selected_sigungu' not in st.session_state:
 st.header("인구분석")
 if st.session_state.sigungu_dict:
     selected_sido = st.session_state.selected_sido
+    selected_sigungu = st.session_state.selected_sigungu
     st.write(selected_sido)
+    st.write(selected_sigungu)
     # sigungu_dict = st.session_state.sigungu_dict
     # st.write(sigungu_dict)
     # st.write(sigungu_dict.get(selected_sido, '선택된 시도 정보가 없습니다.'))
