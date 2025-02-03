@@ -1,22 +1,85 @@
+import time
+
 import streamlit as st
 import pandas as pd
 import numpy as np
 import population_page
 from crawler_ingoo import AgePopulationAnalysis
+from sigunguCode import *
+from streamlit_db import *
+from bson import ObjectId
 
+# ==============================================================================
 # 페이지 기본 설정
+# ==============================================================================
 st.set_page_config(
-    page_icon="🏠",
+    page_icon="📑",
     page_title="최밥통의 부동산 임장보고서",
     layout="wide",
 )
-st.header("데이터 수집")
-### 이부분을 crawler로 모든 정보를 mongodb로 넣는 부분으로 만들기
-#### 시군구 구분 선택할 수 있는 콤보박스 만들기
-if st.button("ddd"):
-    print("yes")
-st.header("입지 평가 기준")
+st.header("📑 최밥통의 부동산 임장보고서")
+# mongodb 'sigungu' collection 연결
+uri = 'mongodb+srv://wldndchl0926:oklove0610!@boodongsancluster.fo8xa.mongodb.net/?retryWrites=true&w=majority&appName=boodongsanCluster'
+db_name = "db"
+collection_name = 'sigungu'
+collection_sigungu = connect_to_mongodb(uri, db_name, collection_name)
 
+
+# ==============================================================================
+# 시군구명 selectbox data mongodb에서 불러오기
+# ==============================================================================
+# 데이터가 있으면 시군구 구분 선택할 수 있는 콤보박스 현시
+query = {'_id': ObjectId('67a09c8bc9f63336ba4040c1')}
+projection = {'_id': 0}  # _id 제외
+if find_documents(collection_sigungu, query):
+    sigungu_dict = find_documents(collection_sigungu, query, projection)
+    # sigungu_dict session_state에 저장
+    st.session_state.sigungu_dict = sigungu_dict[0]
+
+    # 도시 선택 selectedbox
+    selected_sido = st.selectbox('도시를 선택하세요.', list(sigungu_dict[0].keys()), index=1)
+    # 선택된 시도 session_state에 저장
+    st.session_state.selected_sido = selected_sido
+
+    # 시군구 선택 selectedbox
+    selected_sigungu = st.selectbox('시군구를 선택하세요.', sigungu_dict[0][selected_sido], index=1)
+    # 선택된 시도 session_state에 저장
+    st.session_state.selected_sigungu = selected_sigungu
+
+# ==============================================================================
+# 정보수집 버튼들
+# ==============================================================================
+# ==============================================================================
+# 시군구명 selectbox data 크롤링 버튼(유사시)
+# ==============================================================================
+# if st.button("시군구명 다시 불러오기"):
+#     # 시군구명 불러오기
+#     code = SigunguCode()
+#     code.load_sigungu_name()
+#     sigungu_name = code.get_sigungu_name_dict()
+#     # 시군구명 mongodb 덮어쓰기
+#     overwrite_document(collection_sigungu, query, sigungu_name)
+#     st.success('시군구명 업데이트 완료!')
+
+
+# ==============================================================================
+# 데이터 수집 버튼
+# ==============================================================================
+st.subheader("데이터 수집")
+if st.button("데이터 수집"):
+    with st.spinner('잠시만 기다려주세요. 데이터를 불러오는 중입니다...⏳'):
+        # time.sleep(10)
+        # st.success('데이터 수집완료')
+        # '광역시'가 포함된 시군구명만 dict로 만들기
+        gwangyeok_dict = {sido: list(st.session_state.sigungu_dict[sido].values())[0][:2]
+                          for sido in filter(lambda x: '광역시' in x, st.session_state.sigungu_dict)}
+        code = AgePopulationAnalysis(gwangyeok_dict=gwangyeok_dict)
+        st.write(code.get_age_population_data())
+
+# ==============================================================================
+# 입지평가 기준
+# ==============================================================================
+st.subheader("입지 평가 기준")
 # 수도권 기준
 data_sudo = {
     ('직장', '종사자 수'): ['30만명 이상', '20만명 이상', '10만명 이상', '10만명 미만'],

@@ -7,5 +7,8 @@ st.set_page_config(
     layout="wide",
 )
 
-st.subheader("입지분석")
+st.header("입지분석")
+
+
+
 
