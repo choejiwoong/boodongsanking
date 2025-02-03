@@ -17,6 +17,8 @@ def show_population_page():
             # ).properties(width=200, height=200)
         st.success("데이터 불러오기 완료")
 
+
+############## 이 부분이 pages의 인구 페이지로 들어가야함. 데이터를 그곳에서 불러오는 식이 아닌 mongodb에서 끌어오는 식으로
 def get_population_data():
     sido_name = "부산광역시"
     population_analysis = AgePopulationAnalysis(sido_name)
@@ -52,17 +54,31 @@ def get_population_data():
                                     '80 - 84세', '85 - 89세', '90 - 94세', '95 - 99세',
                                     '100 - 104세'], inplace=True)
 
+    # 각 연령대별 인구수를 전체 인구수로 나누어 비율(%)로 변환
+    age_population_ratio_df = age_population_df.div(age_population_df['전체'], axis=0) * 100
+
+    # 연령대별 색상 매핑
+    color_map = {
+        '영유아': '#FFD700',  # 금색
+        '10대': '#FF6347',  # 토마토 빨강
+        '20대': '#4682B4',  # 강철 파랑
+        '30대': '#32CD32',  # 라임 그린
+        '40대': '#8A2BE2',  # 보라색
+        '50대': '#FF69B4',  # 핑크색
+        '60대 이상': '#708090'  # 슬레이트 그레이
+    }
+
     # Streamlit에서 DataFrame 출력
     if not age_population_df.empty:
         st.write("연령대별 인구수 데이터:")
-        st.dataframe(age_population_df)
+        st.dataframe(age_population_df, use_container_width=True)
         # 시군구별 누적 막대 그래프 그리기
-        fig = px.bar(age_population_df,
-                     x=age_population_df.index,
-                     y=['영유아', '10대', '20대', '30대', '40대', '50대', '60대 이상'],
+        fig = px.bar(age_population_ratio_df,
+                     x=age_population_ratio_df.index,
+                     y=age_population_ratio_df.columns,
                      title="시군구별 연령별 인구 분포",
-                     labels={"value": "인구수", "variable": "연령대"},
-                     color="variable",
+                     labels={"value": "인구 비율(%)", "variable": "연령대"},
+                     color_discrete_map=color_map,  # 색상 매핑 적용
                      barmode='stack')
 
         # 그래프 표시

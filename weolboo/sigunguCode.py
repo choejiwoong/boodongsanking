@@ -2,32 +2,76 @@ import PublicDataReader as pdr
 
 class SigunguCode:
     def __init__(self, sido_name: str, sigungu_name: str = None):
+        # 광역시
+        self.gwangyeok_list = ['부산광역시', '대구광역시', '인천광역시', '광주광역시', '대전광역시', '울산광역시']
+        self.gwangyeok_dict = {}
+        # 시도: app.py의 콤보박스로 입력받기
         self.sido_name = sido_name
+        # 시군구: app.py의 콤보박스로 입력받기
         self.sigungu_name = sigungu_name
         self.sigungu_dict = {}
+        # 시도 시군구 읍면동 행정동코드 dict
+        self.hdong_dict = {}
+
+    def load_gwangyeok(self):
+        # 법정동 코드 데이터 불러오기
+        bdong_code = pdr.code_bdong()
+        # 광역시에 해당하는 데이터 필터링
+        filtered_code = bdong_code.loc[bdong_code['시도명'].isin(self.gwangyeok_list)]
+        # 광역시별로 데이터를 추가
+        for _, row in filtered_code.iterrows():
+            sido_name = row['시도명']
+            sido_code = row['시도코드']
+            # 광역시명이 빈 문자열이 아닐 경우만 추가
+            if sido_name:
+                self.gwangyeok_dict[sido_name] = sido_code
 
     def load_sigungu(self):
-        # 행정동 코드 데이터 불러오기
+        # 법정동 코드 데이터 불러오기
         bdong_code = pdr.code_bdong()
-        # 부산광역시에 해당하는 데이터 필터링
+        print(bdong_code)
+        # 시도에 해당하는 데이터 필터링
         filtered_code = bdong_code.loc[bdong_code['시도명'] == self.sido_name]
-        # 시군구명을 입력했으면, 특정 시군구를 필터링
-        if self.sigungu_name:
-            filtered_code = filtered_code.loc[filtered_code['시군구명'] == self.sigungu_name]
-        # # 중복된 행을 제거하여 고유한 '행정동코드'만 처리
-        # filtered_code = filtered_code.drop_duplicates(subset=['행정동코드'])
         # 시군구별로 데이터를 추가
         for _, row in filtered_code.iterrows():
             sigungu_name = row['시군구명']
-            hdong_name = row['읍면동명']
             sigungu_code = row['시군구코드']
-            if sigungu_name:  # 시군구명이 빈 문자열이 아닐 경우만 추가
+            # 시군구명이 빈 문자열이 아닐 경우만 추가
+            if sigungu_name:
                 self.sigungu_dict[sigungu_name] = sigungu_code
+
+    def load_hdong(self):
+        # 행정동 코드 데이터 불러오기
+        hdong_code = pdr.code_hdong()
+        print(hdong_code)
+        # 읍면동에 해당하는 데이터 필터링
+        filtered_code = hdong_code.loc[hdong_code['시도명'] == self.sido_name]
+        if self.sigungu_name:
+            filtered_code = filtered_code.loc[filtered_code['시군구명'] == self.sigungu_name]
+        # 읍면동별로 데이터를 추가
+        for _, row in filtered_code.iterrows():
+            hdong_name = row['읍면동명']
+            hdong_code = row['행정동코드']
+            # 읍면동명이 빈 문자열이 아닐 경우만 추가
+            if hdong_name:
+                self.hdong_dict[hdong_name] = hdong_code
+
+    def get_gwangyeok_dict(self):
+        return dict(self.gwangyeok_dict)
 
     def get_sigungu_dict(self):
         return dict(self.sigungu_dict)
 
-sido_name = "부산광역시"
-code = SigunguCode(sido_name)
-code.load_sigungu()
-print(code.get_sigungu_dict())
+    def get_hdong_dict(self):
+        return dict(self.hdong_dict)
+
+# 용례
+# sido_name = "부산광역시"
+# sigungu_name = "연제구"
+# code = SigunguCode(sido_name, sigungu_name)
+# code.load_gwangyeok()
+# code.load_sigungu()
+# code.load_hdong()
+# print(code.get_gwangyeok_dict())
+# print(code.get_sigungu_dict())
+# print(code.get_hdong_dict())
