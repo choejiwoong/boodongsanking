@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    
+        <script>
+            L_NO_TOUCH = false;
+            L_DISABLE_3D = false;
+        </script>
+    
+    <style>html, body {width: 100%;height: 100%;margin: 0;padding: 0;}</style>
+    <style>#map {position:absolute;top:0;bottom:0;right:0;left:0;}</style>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_80ecf4d8b7755b6d60827fb170fd3728 {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+                .leaflet-container { font-size: 1rem; }
+            </style>
+        
+</head>
+<body>
+    
+    
+            <div class="folium-map" id="map_80ecf4d8b7755b6d60827fb170fd3728" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_80ecf4d8b7755b6d60827fb170fd3728 = L.map(
+                "map_80ecf4d8b7755b6d60827fb170fd3728",
+                {
+                    center: [35.17318611, 129.082075],
+                    crs: L.CRS.EPSG3857,
+                    ...{
+  "zoom": 13.5,
+  "zoomControl": true,
+  "preferCanvas": false,
+}
+
+                }
+            );
+
+            
+
+        
+    
+            var tile_layer_ca4226a4f61292bc739e6ac4196f5010 = L.tileLayer(
+                "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                {
+  "minZoom": 0,
+  "maxZoom": 19,
+  "maxNativeZoom": 19,
+  "noWrap": false,
+  "attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors",
+  "subdomains": "abc",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_ca4226a4f61292bc739e6ac4196f5010.addTo(map_80ecf4d8b7755b6d60827fb170fd3728);
+        
+    
+            var marker_36f5abf3c60b7230076aa2e2b8b70c53 = L.marker(
+                [35.173883, 129.081865],
+                {
+}
+            ).addTo(map_80ecf4d8b7755b6d60827fb170fd3728);
+        
+    
+            var icon_7fdbb6e7849cac5269be1b4973547769 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "landmark",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+            marker_36f5abf3c60b7230076aa2e2b8b70c53.setIcon(icon_7fdbb6e7849cac5269be1b4973547769);
+        
+    
+            marker_36f5abf3c60b7230076aa2e2b8b70c53.bindTooltip(
+                `<div>
+                     연산골드포레
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_d5a30bea54c5ff37ea99fbd8c74004a6 = L.marker(
+                [35.18, 129.075],
+                {
+}
+            ).addTo(map_80ecf4d8b7755b6d60827fb170fd3728);
+        
+    
+            var icon_bdff84fa6648aa8ca7df0684fdf70af6 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "landmark",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+            marker_d5a30bea54c5ff37ea99fbd8c74004a6.setIcon(icon_bdff84fa6648aa8ca7df0684fdf70af6);
+        
+    
+            marker_d5a30bea54c5ff37ea99fbd8c74004a6.bindTooltip(
+                `<div>
+                     해운대아이파크
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_2423f86348bee0cb155dadde58153ebc = L.marker(
+                [35.16, 129.09],
+                {
+}
+            ).addTo(map_80ecf4d8b7755b6d60827fb170fd3728);
+        
+    
+            var icon_14bc5d38e0986c245ae13b1f41959d62 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "landmark",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+            marker_2423f86348bee0cb155dadde58153ebc.setIcon(icon_14bc5d38e0986c245ae13b1f41959d62);
+        
+    
+            marker_2423f86348bee0cb155dadde58153ebc.bindTooltip(
+                `<div>
+                     수영SK뷰
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_2c2ab47ea66fb3fd72bf774abd5ffce7 = L.marker(
+                [35.15, 129.1],
+                {
+}
+            ).addTo(map_80ecf4d8b7755b6d60827fb170fd3728);
+        
+    
+            var icon_45b046c28cc54dd1c556899f227f9630 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "landmark",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+            marker_2c2ab47ea66fb3fd72bf774abd5ffce7.setIcon(icon_45b046c28cc54dd1c556899f227f9630);
+        
+    
+            marker_2c2ab47ea66fb3fd72bf774abd5ffce7.bindTooltip(
+                `<div>
+                     광안KCC스위첸
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_e7da8a697b071f766f26e1ace9d80746 = L.marker(
+                [35.14, 129.11],
+                {
+}
+            ).addTo(map_80ecf4d8b7755b6d60827fb170fd3728);
+        
+    
+            var icon_36b5df43116f1163d5409812c27c5292 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "landmark",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+            marker_e7da8a697b071f766f26e1ace9d80746.setIcon(icon_36b5df43116f1163d5409812c27c5292);
+        
+    
+            marker_e7da8a697b071f766f26e1ace9d80746.bindTooltip(
+                `<div>
+                     센텀리버뷰
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                var lat_lng_popup_cfe9a4e189661ac4c71c026ccd6d46c5 = L.popup();
+                function latLngPop(e) {
+                    lat_lng_popup_cfe9a4e189661ac4c71c026ccd6d46c5
+                        .setLatLng(e.latlng)
+                        .setContent("Latitude: " + e.latlng.lat.toFixed(4) +
+                                    "<br>Longitude: " + e.latlng.lng.toFixed(4))
+                        .openOn(map_80ecf4d8b7755b6d60827fb170fd3728);
+                    }
+                map_80ecf4d8b7755b6d60827fb170fd3728.on('click', latLngPop);
+            
+    
+            var polygon_797ea197e187c181d5d819b1b7c7705a = L.polygon(
+                [[35.1735, 129.0815], [35.174, 129.0818], [35.1745, 129.082], [35.174, 129.0825], [35.1735, 129.0822]],
+                {"bubblingMouseEvents": true, "color": "darkgreen", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "darkgreen", "fillOpacity": 0.3, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 1.0, "smoothFactor": 1.0, "stroke": true, "weight": 3}
+            ).addTo(map_80ecf4d8b7755b6d60827fb170fd3728);
+        
+</script>
+</html>
