@@ -30,23 +30,25 @@ st.header("인구분석")
 if st.session_state.sigungu_dict:
     selected_sido = st.session_state.selected_sido
     selected_sigungu = st.session_state.selected_sigungu
-    st.write(selected_sido)
-    st.write(selected_sigungu)
-    # sigungu_dict = st.session_state.sigungu_dict
-    # st.write(sigungu_dict)
-    # st.write(sigungu_dict.get(selected_sido, '선택된 시도 정보가 없습니다.'))
+    # ==============================================================================
+    # 광역시별 / 시도 시군구 읍면동별 연령별 비중
+    # ==============================================================================
+    if not st.session_state.get_age_population_data_gwangyeok.empty:
+        # df 그리기
+        st.subheader("광역시별 연령대별 인구수 데이터")
+        st.dataframe(st.session_state.get_age_population_data_gwangyeok, use_container_width=True)
+        # 그래프 그리기
+        st.plotly_chart(st.session_state.get_age_population_plotly_gwangyeok)
 
-    # df 그리기
-    st.write("연령대별 인구수 데이터")
-    st.dataframe(st.session_state.get_age_population_data_gwangyeok, use_container_width=True)
-    # 그래프 그리기
-    st.plotly_chart(st.session_state.get_age_population_plotly_gwangyeok)
-
-    # df 그리기
-    st.write("연령대별 인구수 데이터")
-    st.dataframe(st.session_state.get_age_population_data_sigungu, use_container_width=True)
-    # 그래프 그리기
-    st.plotly_chart(st.session_state.get_age_population_plotly_sigungu)
+    if not st.session_state.get_age_population_data_sigungu.empty:
+        # df 그리기
+        st.subheader(f"{selected_sido} {selected_sigungu} 연령대별 인구수 데이터")
+        st.dataframe(st.session_state.get_age_population_data_sigungu, use_container_width=True)
+        # 그래프 그리기
+        st.plotly_chart(st.session_state.get_age_population_plotly_sigungu)
+    # ==============================================================================
+    # 광역시별 / 시군구별 / 시도 시군구 읍면동별 총인구수, 세대수, 세대당 인구
+    # ==============================================================================
 
 
 

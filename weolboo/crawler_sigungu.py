@@ -72,18 +72,27 @@ class SigunguCode:
     def load_hdong(self):
         # 행정동 코드 데이터 불러오기
         hdong_code = pdr.code_hdong()
-        # 읍면동에 해당하는 데이터 필터링
-        filtered_code = hdong_code.loc[hdong_code['시군구명'] == self.sigungu_name]
-        print(filtered_code)
-        # if self.sigungu_name:
-        #     filtered_code = filtered_code.loc[filtered_code['시군구명'] == self.sigungu_name]
+        # 시도명 매핑 규칙: mapping 항목이 있으면 제외
+        mapping = ['직할시', '제주도', '전라북도', '강원도']
+        # 직할시 -> 광역시 / 제주도 -> 제주특별자치도 / 전라북도 -> 전북특별자치도 / 강원도 -> 강원특별자치도
+        # 시도명 매핑 적용
         # 읍면동별로 데이터를 추가
-        for _, row in filtered_code.iterrows():
+        for _, row in hdong_code.iterrows():
+            sido_name = row['시도명']
+            sigungu_name = row['시군구명']
             hdong_name = row['읍면동명']
             hdong_code = row['행정동코드']
+            if any(item in sido_name for item in mapping):
+                continue
             # 읍면동명이 빈 문자열이 아닐 경우만 추가
-            if hdong_name:
-                self.hdong_dict[hdong_name] = hdong_code
+            if sido_name:
+                if sigungu_name:
+                    if hdong_name:
+                        if sido_name not in self.hdong_dict:
+                            self.hdong_dict[sido_name] = {}
+                        if sigungu_name not in self.hdong_dict[sido_name]:
+                            self.hdong_dict[sido_name][sigungu_name] = {}
+                        self.hdong_dict[sido_name][sigungu_name][hdong_name] = hdong_code
 
     def get_sigungu_name_dict(self):
         return dict(self.sigungu_name_dict)
@@ -98,28 +107,28 @@ class SigunguCode:
         return dict(self.hdong_dict)
 
 # 용례
-sido_name = "부산광역시"
-sigungu_name = "연제구"
-code = SigunguCode(sido_name, sigungu_name)
-code.load_sigungu_name()
-code.load_gwangyeok()
-code.load_sigungu()
-code.load_hdong()
-print(code.get_sigungu_name_dict())
-print(code.get_gwangyeok_dict())
-print(code.get_sigungu_dict())
-print(code.get_hdong_dict())
+# sido_name = "부산광역시"
+# sigungu_name = "연제구"
+# code = SigunguCode(sido_name, sigungu_name)
+# code.load_sigungu_name()
+# code.load_gwangyeok()
+# code.load_sigungu()
+# code.load_hdong()
+# print(code.get_sigungu_name_dict())
+# print(code.get_gwangyeok_dict())
+# print(code.get_sigungu_dict())
+# print(code.get_hdong_dict())
 
-code = SigunguCode(sigungu_name='연제구')
-code.load_hdong()
-hdong_name = code.get_hdong_dict()
-print(hdong_name)
-uri = 'mongodb+srv://wldndchl0926:oklove0610!@boodongsancluster.fo8xa.mongodb.net/?retryWrites=true&w=majority&appName=boodongsanCluster'
-db_name = "db"
-collection_name = 'sigungu'
-collection_sigungu = connect_to_mongodb(uri, db_name, collection_name)
-query = {'_id': ObjectId('67a09c8bc9f63336ba4040c1')}
-
-insert_document(collection_sigungu, code.get_sigungu_name_dict())
+# code = SigunguCode()
+# code.load_hdong()
+# hdong_name = code.get_hdong_dict()
+# print(hdong_name)
+# uri = 'mongodb+srv://wldndchl0926:oklove0610!@boodongsancluster.fo8xa.mongodb.net/?retryWrites=true&w=majority&appName=boodongsanCluster'
+# db_name = "db"
+# collection_name = 'sigungu'
+# collection_sigungu = connect_to_mongodb(uri, db_name, collection_name)
+# query = {'_id': ObjectId('67a09c8bc9f63336ba4040c1')}
+#
+# # insert_document(collection_sigungu, code.get_sigungu_name_dict())
 # # 시군구명 mongodb 덮어쓰기
-# update_document(collection_sigungu, query, hdong_name)
+# overwrite_document(collection_sigungu, query, hdong_name)

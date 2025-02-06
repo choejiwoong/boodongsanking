@@ -41,7 +41,7 @@ if find_documents(collection_sigungu, query):
     if 'selected_sido' not in st.session_state or st.session_state.selected_sido != selected_sido:
         st.session_state.selected_sido = selected_sido
     # 시군구 선택 selectedbox
-    selected_sigungu = st.selectbox('시군구를 선택하세요.', sigungu_dict[selected_sido])
+    selected_sigungu = st.selectbox('시군구를 선택하세요.', sigungu_dict[0][selected_sido].keys())
     # 선택된 시군구 session_state에 저장
     if 'selected_sigungu' not in st.session_state or st.session_state.selected_sigungu != selected_sigungu:
         st.session_state.selected_sigungu = selected_sigungu
@@ -76,11 +76,13 @@ if find_documents(collection_sigungu, query):
 st.subheader("데이터 수집")
 if st.button("데이터 수집"):
     with st.spinner('잠시만 기다려주세요. 데이터를 불러오는 중입니다...⏳'):
-        # time.sleep(10)
-        # st.success('데이터 수집완료')
         # '광역시'가 포함된 시군구명만 dict로 만들기
-        gwangyeok_dict = {sido: list(st.session_state.sigungu_dict[sido].values())[0][:2]
-                          for sido in filter(lambda x: '광역시' in x, st.session_state.sigungu_dict)}
+        gwangyeok_dict = {
+            sido: list(list(hdong_dict.values())[0][:2]  # 첫 번째 행정동 코드에서 앞 두 자리만 추출
+                       for sigungu, hdong_dict in sigungu_dict.items())[0]
+            for sido, sigungu_dict in st.session_state.sigungu_dict.items()
+            if '광역시' in sido  # 광역시에 해당하는 시도만 필터링
+        }
         code_gwangyeok = AgePopulationAnalysis(gwangyeok_dict=gwangyeok_dict)
         get_age_population_data_gwangyeok = code_gwangyeok.get_age_population_data()
         st.session_state.get_age_population_data_gwangyeok = get_age_population_data_gwangyeok
@@ -89,7 +91,6 @@ if st.button("데이터 수집"):
         # 특정 시군구의 행정동
         selected_sido = st.session_state.selected_sido
         selected_sigungu = st.session_state.selected_sigungu
-        print(st.session_state.sigungu_dict)
         hdong_dict = st.session_state.sigungu_dict[selected_sido][selected_sigungu]
         code_hdong = AgePopulationAnalysis(hdong_dict=hdong_dict)
         get_age_population_data_sigungu = code_hdong.get_age_population_data()
