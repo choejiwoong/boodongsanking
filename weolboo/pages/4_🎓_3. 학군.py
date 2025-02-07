@@ -8,3 +8,9 @@ st.set_page_config(
 )
 
 st.header("학군분석")
+
+if 'school_achievement_ranking' not in st.session_state:
+    st.session_state.school_achievement_ranking = None
+
+if st.session_state.school_achievement_ranking:
+    st.write(st.session_state.school_achievement_ranking)

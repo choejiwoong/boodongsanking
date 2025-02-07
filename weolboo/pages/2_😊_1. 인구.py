@@ -33,14 +33,14 @@ if st.session_state.sigungu_dict:
     # ==============================================================================
     # 광역시별 / 시도 시군구 읍면동별 연령별 비중
     # ==============================================================================
-    if not st.session_state.get_age_population_data_gwangyeok.empty:
+    if st.session_state.get_age_population_data_gwangyeok:
         # df 그리기
         st.subheader("광역시별 연령대별 인구수 데이터")
         st.dataframe(st.session_state.get_age_population_data_gwangyeok, use_container_width=True)
         # 그래프 그리기
         st.plotly_chart(st.session_state.get_age_population_plotly_gwangyeok)
 
-    if not st.session_state.get_age_population_data_sigungu.empty:
+    if st.session_state.get_age_population_data_sigungu:
         # df 그리기
         st.subheader(f"{selected_sido} {selected_sigungu} 연령대별 인구수 데이터")
         st.dataframe(st.session_state.get_age_population_data_sigungu, use_container_width=True)

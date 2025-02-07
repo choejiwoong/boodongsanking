@@ -5,6 +5,7 @@ from crawler_ingoo import AgePopulationAnalysis
 from crawler_sigungu import *
 from streamlit_db import *
 from bson import ObjectId
+from crawler_hakgun import *
 
 # ==============================================================================
 # 페이지 기본 설정
@@ -98,3 +99,7 @@ if st.button("데이터 수집"):
         get_age_population_plotly_sigungu = code_hdong.get_age_population_plotly(get_age_population_data_sigungu)
         st.session_state.get_age_population_plotly_sigungu = get_age_population_plotly_sigungu
         st.success('😊_1. 인구/연령대별 인구수 데이터 불러오기 완료')
+
+        school_achievement = SchoolAchievement(st.session_state.selected_sido, st.session_state.selected_sigungu)
+        st.session_state.school_achievement_ranking = school_achievement.calculate_ranking()
+        st.success('🎓_3. 학군 데이터 불러오기 완료')

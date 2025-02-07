@@ -1,25 +1,14 @@
 ### 학군 크롤러: 완성됨
 import requests
 from bs4 import BeautifulSoup
-from naverMaemool.crawler import CrawlBot
+import pandas as pd
 
 # 학군 계산 클래스
 class SchoolAchievement:
     def __init__(self, si_name, gungu_name):
         self.city_name = si_name
         self.sigungu_name = gungu_name
-        self.cb = CrawlBot()
-        self.sigungucode = self.get_sigungucode()
-
-    def get_sigungucode(self):
-        """도시명과 시군구명을 기반으로 시군구 코드 얻기"""
-        try:
-            city_dict = self.cb.get_gungu_dict(self.city_name)
-            sigungucode = city_dict[self.sigungu_name][:5]  # 시군구 코드 추출
-            return sigungucode
-        except KeyError:
-            print(f"잘못된 도시명이나 시군구명입니다: {self.city_name}, {self.sigungu_name}")
-            return None
+        self.sigungucode = "26470"
 
     def fetch_school_achievement(self):
         """
@@ -68,7 +57,7 @@ class SchoolAchievement:
                     "특목고 진학률": admission_rate
                 })
 
-        return school_data
+        return pd.DataFrame(school_data)
 
     def calculate_ranking(self):
         """학군 랭크 계산"""
@@ -126,6 +115,3 @@ class SchoolAchievement:
         print(f"학군 랭크: {rank}")
         return rank
 
-# 예시: 부산 해운대구 학군 랭크 계산
-school_achievement = SchoolAchievement("부산시", "해운대구")
-school_achievement.calculate_ranking()
