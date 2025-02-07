@@ -12,7 +12,7 @@ st.set_page_config(
 st.header("분위기임장")
 
 # Google My Maps 공유 링크 (여기에 본인 지도 URL 입력)
-google_maps_url = "https://www.google.com/maps/d/embed?mid=1GqeLe9S_dDf0zRAuGrbK5TNhuyIKBIs&usp=sharing"  # 네 지도 URL로 변경!
+google_maps_url = "https://www.google.com/maps/d/embed?mid=1GqeLe9S_dDf0zRAuGrbK5TNhuyIKBIs&usp=sharing"  # 내 지도 URL로 변경!
 
 # Streamlit에서 지도 표시 (iframe 사용)
 st.components.v1.iframe(google_maps_url, width=800, height=600)
@@ -75,3 +75,5 @@ check_text = f"상: {int(total_high)} 개 / 중: {int(total_mid)} 개 / 하: {in
 
 # ✅ 추가 의견 입력
 additional_comments = st.text_area("📝 추가 의견 입력", value=check_text)
+
+######## 시군구 경계 및 상권, 학원가 폴리곤 데이터를 kml 데이터로 변경해서 구글 내지도에 업로드 하기

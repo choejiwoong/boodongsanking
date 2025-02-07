@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+from click import style
+
 from crawler_ingoo import AgePopulationAnalysis
 from crawler_sigungu import *
 from streamlit_db import *
@@ -21,7 +23,6 @@ uri = 'mongodb+srv://wldndchl0926:oklove0610!@boodongsancluster.fo8xa.mongodb.ne
 db_name = "db"
 collection_name = 'sigungu'
 collection_sigungu = connect_to_mongodb(uri, db_name, collection_name)
-
 
 # ==============================================================================
 # 시군구명 selectbox data mongodb에서 불러오기
@@ -75,7 +76,7 @@ if find_documents(collection_sigungu, query):
 # 데이터 수집 버튼
 # ==============================================================================
 st.subheader("데이터 수집")
-if st.button("데이터 수집"):
+if st.button("😊 인구 데이터 수집", use_container_width=True):
     with st.spinner('잠시만 기다려주세요. 데이터를 불러오는 중입니다...⏳'):
         # '광역시'가 포함된 시군구명만 dict로 만들기
         gwangyeok_dict = {
@@ -99,7 +100,12 @@ if st.button("데이터 수집"):
         get_age_population_plotly_sigungu = code_hdong.get_age_population_plotly(get_age_population_data_sigungu)
         st.session_state.get_age_population_plotly_sigungu = get_age_population_plotly_sigungu
         st.success('😊_1. 인구/연령대별 인구수 데이터 불러오기 완료')
+# ==============================================================================
+# 학군 데이터 수집 버튼
+# ==============================================================================
+if st.button("🎓 학군 데이터 수집", use_container_width=True):
+    school_achievement = SchoolAchievement(selected_sido, selected_sigungu, st.session_state.sigungu_dict)
+    st.session_state.fetch_school_achievement = school_achievement.fetch_school_achievement()
+    st.session_state.school_achievement_ranking = school_achievement.calculate_ranking(st.session_state.fetch_school_achievement)
+    st.success('🎓_3. 학군 데이터 불러오기 완료')
 
-        school_achievement = SchoolAchievement(st.session_state.selected_sido, st.session_state.selected_sigungu)
-        st.session_state.school_achievement_ranking = school_achievement.calculate_ranking()
-        st.success('🎓_3. 학군 데이터 불러오기 완료')
