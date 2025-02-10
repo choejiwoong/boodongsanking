@@ -75,16 +75,15 @@ if find_documents(collection_sigungu, query):
 # ==============================================================================
 # 데이터 수집 버튼
 # ==============================================================================
+# '광역시'가 포함된 시군구명만 dict로 만들기
+gwangyeok_dict = {
+    sido: sigungu_dict["전체"][:2]  # '전체' 키의 값을 가져옴
+    for sido, sigungu_dict in st.session_state.sigungu_dict.items()
+    if "광역시" in sido and "전체" in sigungu_dict  # '광역시' 포함 + '전체' 키가 있는 경우만
+}
 st.subheader("데이터 수집")
 if st.button("😊 인구 데이터 수집", use_container_width=True):
     with st.spinner('잠시만 기다려주세요. 데이터를 불러오는 중입니다...⏳'):
-        # '광역시'가 포함된 시군구명만 dict로 만들기
-        gwangyeok_dict = {
-            sido: list(list(hdong_dict.values())[0][:2]  # 첫 번째 행정동 코드에서 앞 두 자리만 추출
-                       for sigungu, hdong_dict in sigungu_dict.items())[0]
-            for sido, sigungu_dict in st.session_state.sigungu_dict.items()
-            if '광역시' in sido  # 광역시에 해당하는 시도만 필터링
-        }
         code_gwangyeok = AgePopulationAnalysis(gwangyeok_dict=gwangyeok_dict)
         get_age_population_data_gwangyeok = code_gwangyeok.get_age_population_data()
         st.session_state.get_age_population_data_gwangyeok = get_age_population_data_gwangyeok
@@ -104,8 +103,14 @@ if st.button("😊 인구 데이터 수집", use_container_width=True):
 # 학군 데이터 수집 버튼
 # ==============================================================================
 if st.button("🎓 학군 데이터 수집", use_container_width=True):
-    school_achievement = SchoolAchievement(selected_sido, selected_sigungu, st.session_state.sigungu_dict)
-    st.session_state.fetch_school_achievement = school_achievement.fetch_school_achievement()
-    st.session_state.school_achievement_ranking = school_achievement.calculate_ranking(st.session_state.fetch_school_achievement)
-    st.success('🎓_3. 학군 데이터 불러오기 완료')
+    with st.spinner('잠시만 기다려주세요. 데이터를 불러오는 중입니다...⏳'):
+        school_achievement = SchoolAchievement(selected_sido, selected_sigungu, gwangyeok_dict, st.session_state.sigungu_dict)
+        if selected_sigungu != '전체':
+            st.session_state.fetch_school_achievement = school_achievement.fetch_school_achievement()
+            # 구분이 selected_sigungu와 일치하는 항목만 필터링
+            filtered_list = [item for item in st.session_state.fetch_school_achievement if item["구분"] == st.session_state.selected_sigungu]
+            st.session_state.school_achievement_ranking = school_achievement.calculate_ranking(filtered_list)
+            st.success('🎓_3. 학군 데이터 불러오기 완료')
+        else:
+            st.error('⚠ 시군구명을 선택해주세요!')
 
