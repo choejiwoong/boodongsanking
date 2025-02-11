@@ -2,10 +2,11 @@ import streamlit as st
 
 # 페이지 기본 설정
 st.set_page_config(
-    page_icon="👨‍👩‍👧‍👦",
+    page_icon="😊",
     page_title="인구",
     layout="wide",
 )
+
 # session_state 기본값 설정
 # sigungu_dict
 if 'sigungu_dict' not in st.session_state:
@@ -26,8 +27,10 @@ if 'get_age_population_data_sigungu' not in st.session_state:
 if 'get_age_population_plotly_sigungu' not in st.session_state:
     st.session_state.get_age_population_plotly_sigungu = None
 
-st.header("인구분석")
-if st.session_state.sigungu_dict:
+if st.session_state.get_age_population_data_sigungu == None:
+    st.warning("⚠ 인구 데이터가 없습니다.")
+if st.session_state.get_age_population_data_sigungu:
+    st.header("😊 1. 인구")
     selected_sido = st.session_state.selected_sido
     selected_sigungu = st.session_state.selected_sigungu
     # ==============================================================================

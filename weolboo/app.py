@@ -13,11 +13,11 @@ from crawler_hakgun import *
 # 페이지 기본 설정
 # ==============================================================================
 st.set_page_config(
-    page_icon="📑",
-    page_title="최밥통의 부동산 임장보고서",
+    page_icon="💡",
+    page_title="부동산 임장보고서",
     layout="wide",
 )
-st.header("📑 최밥통의 부동산 임장보고서")
+st.header("💡 부동산 임장보고서")
 # mongodb 'sigungu' collection 연결
 uri = 'mongodb+srv://wldndchl0926:oklove0610!@boodongsancluster.fo8xa.mongodb.net/?retryWrites=true&w=majority&appName=boodongsanCluster'
 db_name = "db"
@@ -84,33 +84,47 @@ gwangyeok_dict = {
 st.subheader("데이터 수집")
 if st.button("😊 인구 데이터 수집", use_container_width=True):
     with st.spinner('잠시만 기다려주세요. 데이터를 불러오는 중입니다...⏳'):
-        code_gwangyeok = AgePopulationAnalysis(gwangyeok_dict=gwangyeok_dict)
-        get_age_population_data_gwangyeok = code_gwangyeok.get_age_population_data()
-        st.session_state.get_age_population_data_gwangyeok = get_age_population_data_gwangyeok
-        get_age_population_plotly_gwangyeok = code_gwangyeok.get_age_population_plotly(get_age_population_data_gwangyeok)
-        st.session_state.get_age_population_plotly_gwangyeok = get_age_population_plotly_gwangyeok
-        # 특정 시군구의 행정동
-        selected_sido = st.session_state.selected_sido
-        selected_sigungu = st.session_state.selected_sigungu
-        hdong_dict = st.session_state.sigungu_dict[selected_sido][selected_sigungu]
-        code_hdong = AgePopulationAnalysis(hdong_dict=hdong_dict)
-        get_age_population_data_sigungu = code_hdong.get_age_population_data()
-        st.session_state.get_age_population_data_sigungu = get_age_population_data_sigungu
-        get_age_population_plotly_sigungu = code_hdong.get_age_population_plotly(get_age_population_data_sigungu)
-        st.session_state.get_age_population_plotly_sigungu = get_age_population_plotly_sigungu
-        st.success('😊_1. 인구/연령대별 인구수 데이터 불러오기 완료')
+        if selected_sigungu != '전체':
+            code_gwangyeok = AgePopulationAnalysis(gwangyeok_dict=gwangyeok_dict)
+            get_age_population_data_gwangyeok = code_gwangyeok.get_age_population_data()
+            st.session_state.get_age_population_data_gwangyeok = get_age_population_data_gwangyeok
+            get_age_population_plotly_gwangyeok = code_gwangyeok.get_age_population_plotly(get_age_population_data_gwangyeok)
+            st.session_state.get_age_population_plotly_gwangyeok = get_age_population_plotly_gwangyeok
+            # 특정 시군구의 행정동
+            selected_sido = st.session_state.selected_sido
+            selected_sigungu = st.session_state.selected_sigungu
+            hdong_dict = st.session_state.sigungu_dict[selected_sido][selected_sigungu]
+            code_hdong = AgePopulationAnalysis(hdong_dict=hdong_dict)
+            get_age_population_data_sigungu = code_hdong.get_age_population_data()
+            st.session_state.get_age_population_data_sigungu = get_age_population_data_sigungu
+            get_age_population_plotly_sigungu = code_hdong.get_age_population_plotly(get_age_population_data_sigungu)
+            st.session_state.get_age_population_plotly_sigungu = get_age_population_plotly_sigungu
+            st.success('😊_1. 인구/연령대별 인구수 데이터 불러오기 완료')
+        else:
+            st.error('☢ 시군구명을 선택해주세요!')
 # ==============================================================================
 # 학군 데이터 수집 버튼
 # ==============================================================================
 if st.button("🎓 학군 데이터 수집", use_container_width=True):
     with st.spinner('잠시만 기다려주세요. 데이터를 불러오는 중입니다...⏳'):
-        school_achievement = SchoolAchievement(selected_sido, selected_sigungu, gwangyeok_dict, st.session_state.sigungu_dict)
         if selected_sigungu != '전체':
-            st.session_state.fetch_school_achievement = school_achievement.fetch_school_achievement()
-            # 구분이 selected_sigungu와 일치하는 항목만 필터링
-            filtered_list = [item for item in st.session_state.fetch_school_achievement if item["구분"] == st.session_state.selected_sigungu]
-            st.session_state.school_achievement_ranking = school_achievement.calculate_ranking(filtered_list)
+            # 학업성취도 관련 인스턴스 생성
+            school_achievement = SchoolAchievement(selected_sido, selected_sigungu, gwangyeok_dict, st.session_state.sigungu_dict)
+            # 중학교 학업성취도 관련 크롤링
+            st.session_state.fetch_mid_school_achievement = school_achievement.fetch_school_achievement("3")
+            filtered_data = [item for item in st.session_state.fetch_mid_school_achievement if item['구분'] == selected_sigungu]
+            st.session_state.mid_school_achievement_ranking = school_achievement.calculate_ranking(filtered_data)
+            # 고등학교 학업성취도 관련 크롤링
+            st.session_state.fetch_high_school_achievement = school_achievement.fetch_school_achievement("4")
+
+            # 초등학교 관련 인스턴스 생성
+            region_code = st.session_state.sigungu_dict[selected_sido][selected_sigungu]["전체"][:5]
+            school_info_api = SchoolInfoAPI(region_code)
+            # 데이터 크롤링
+            elem_school_data = school_info_api.fetch_elem_school_data()
+            # 데이터 처리
+            st.session_state.process_school_info_data = school_info_api.process_school_info_data(elem_school_data)
             st.success('🎓_3. 학군 데이터 불러오기 완료')
         else:
-            st.error('⚠ 시군구명을 선택해주세요!')
+            st.error('☢ 시군구명을 선택해주세요!')
 

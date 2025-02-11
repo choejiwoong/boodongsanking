@@ -110,8 +110,6 @@ class AgePopulationAnalysis:
         pivot_df = grouped_df.pivot_table(index='구분', columns='연령대', values='수치값', aggfunc='sum').reset_index()
         pivot_df.set_index('구분', inplace=True)
         pivot_df = pivot_df.apply(pd.to_numeric, errors='coerce')
-        # 결과 출력
-        print(pivot_df)
         return pivot_df
 
     # ==============================================================================

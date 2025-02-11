@@ -6,5 +6,3 @@ st.set_page_config(
     page_title="직장분석",
     layout="wide",
 )
-
-st.header("직장분석")
