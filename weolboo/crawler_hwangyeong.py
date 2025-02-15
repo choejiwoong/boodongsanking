@@ -1,206 +1,141 @@
-###### 반쯤 완료??
 import requests
+import urllib3
+import pandas as pd
 
-# Kakao API 키
-api_key = "d7514f12a0f0d5e317dc677c7bcd97af"  # 발급받은 API 키를 입력하세요
+# category_code는 여기 참고: https://developers.kakao.com/docs/latest/ko/local/dev-guide
 
-# 시군구명으로 위도, 경도 구하는 함수
-def get_coordinates_from_sgg(sgg_name):
-    url = "https://dapi.kakao.com/v2/local/search/address.json"
-    headers = {
-        "Authorization": f"KakaoAK {api_key}",
-    }
-    params = {
-        "query": sgg_name,  # 시군구명
-    }
-    response = requests.get(url, params=params, headers=headers, verify=False)
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)  # InsecureRequestWarning 방지
+# # 모든 행과 열을 출력하도록 설정
+# pd.set_option('display.max_rows', None)  # 출력 가능한 최대 행 개수
+# pd.set_option('display.max_columns', None)  # 출력 가능한 최대 열 개수
 
-    if response.status_code == 200:
-        data = response.json()
-        if data['documents']:
-            # 첫 번째 문서에서 좌표 정보 가져오기
-            latitude = data['documents'][0]['y']
-            longitude = data['documents'][0]['x']
-            return latitude, longitude
-        else:
-            print("해당 시군구에 대한 좌표 정보를 찾을 수 없습니다.")
-            return None, None
-    else:
-        print(f"Error: {response.status_code}, Response: {response.text}")
+class PlaceSearcher:
+    def __init__(self, api_key="d7514f12a0f0d5e317dc677c7bcd97af"):
+        self.api_key = api_key
+        self.categories = {
+            "백화점": {"query": "백화점", "allowed_names": ["신세계백화점", "롯데백화점", "현대백화점"]},
+            "대형마트": {"query": None, "category_code": "MT1", "allowed_names": ["롯데마트", "메가마트", "이케아", "가정,생활 > 대형마트 > 이마트", "가정,생활 > 대형마트 > 홈플러스", "코스트코", "트레이더스 홀세일 클럽"]},
+            "종합병원": {"query": "종합병원", "allowed_names": None},
+            "스타벅스": {"query": "스타벅스", "allowed_names": None},
+            "문화시설": {"query": None, "category_code": "CT1", "allowed_names": None},
+            "소아청소년과": {"query": "소아청소년과", "allowed_names": None},
+            "유기농마트": {"query": "유기농마트", "allowed_names": None},
+            "도서관": {"query": "도서관", "allowed_names": None},
+            "공원": {"query": "공원", "allowed_names": None},
+            "체육시설": {"query": "체육관", "allowed_names": None}
+        }
+        self.results = {category: [] for category in self.categories}
+        self.all_places = {category: [] for category in self.categories}
+
+    def get_coordinates_from_sgg(self, sido_name, sigungu_name):
+        url = "https://dapi.kakao.com/v2/local/search/address.json"
+        headers = {"Authorization": f"KakaoAK {self.api_key}"}
+        params = {"query": f"{sido_name} {sigungu_name}"}
+        response = requests.get(url, params=params, headers=headers, verify=False)
+
+        if response.status_code == 200:
+            data = response.json()
+            if data['documents']:
+                return data['documents'][0]['y'], data['documents'][0]['x']
         return None, None
 
+    def search_places(self, latitude, longitude, sigungu_name, category):
+        params = {"x": longitude, "y": latitude, "radius": 20000}
+        category_info = self.categories[category]
+        url = "https://dapi.kakao.com/v2/local/search/keyword.json" if category_info["query"] else "https://dapi.kakao.com/v2/local/search/category.json"
+        headers = {"Authorization": f"KakaoAK {self.api_key}"}
+        if category_info["query"]:
+            params["query"] = category_info["query"]
+        elif category_info["category_code"]:
+            params["category_group_code"] = category_info["category_code"]
 
-# 카테고리별 장소 검색 함수
-def search_category(category_code, category_name, query=None, latitude=None, longitude=None, sigungu_name=None):
-    category_url = "https://dapi.kakao.com/v2/local/search/category.json" if query is None else "https://dapi.kakao.com/v2/local/search/query.json"
-    category_headers = {
-        "Authorization": f"KakaoAK {api_key}",
-    }
-    params = {
-        "category_group_code": category_code,  # 카테고리 코드
-        "radius": 2000,  # 검색 반경 (단위: 미터)
-        "x": longitude,  # 경도
-        "y": latitude,  # 위도
-    }
-    if query:
-        params["query"] = query  # 쿼리 파라미터로 키워드 설정
+        try:
+            response = requests.get(url, headers=headers, params=params, verify=False)
+            response.raise_for_status()
+            places = response.json().get('documents', [])
+            results = []
+            seen_places = set()
+            seen_addresses = set()
 
-    page = 1
-    total_count = 0  # 카운팅할 개수
-    seen_places = set()  # 이미 출력된 장소를 기록할 집합
-    while True:
-        params["page"] = page
-        response = requests.get(category_url, params=params, headers=category_headers, verify=False)
-        if response.status_code == 200:
-            data = response.json()
-            places = data['documents']
-            if not places:
-                break
-            for place in places:
-                place_id = place['id']  # 고유 ID를 사용하여 중복을 방지
-                if place_id not in seen_places and sigungu_name in place['road_address_name']:  # 해당 시군구명에 속한 장소만 필터링
-                    seen_places.add(place_id)
-                    total_count += 1
-                    print(f"{category_name} 이름: {place['place_name']}")
-                    print(f"주소: {place['address_name']}")
-                    print(f"위도: {place['y']}, 경도: {place['x']}")
-                    print('-' * 50)
-            # 페이지가 더 있는지 확인
-            if page * 15 >= data['meta']['total_count']:  # 한 페이지에 최대 15개 장소가 나옴
-                break
-            page += 1
-        else:
-            print(f"{category_name} 검색 오류: {response.status_code}, Response: {response.text}")
-            break
-    return total_count
-
-
-# 스타벅스 검색 함수
-def search_starbucks(latitude, longitude, sigungu_name):
-    search_query = '스타벅스'
-    url = f'https://dapi.kakao.com/v2/local/search/keyword.json?query={search_query}'
-    headers = {
-        "Authorization": f"KakaoAK {api_key}",
-    }
-    params = {
-        "x": longitude,  # 경도
-        "y": latitude,  # 위도
-        "radius": 2000,  # 검색 반경 (단위: 미터)
-    }
-
-    response = requests.get(url, headers=headers, params=params, verify=False)
-    total_count = 0  # 스타벅스 개수를 셀 변수
-    if response.status_code == 200:
-        data = response.json()
-        places = data['documents']
-        seen_places = set()  # 이미 출력된 장소 고유 ID 기록
-        for place in places:
-            place_id = place['id']
-            # 스타벅스만 필터링
-            if '스타벅스' in place['place_name'] and place_id not in seen_places and sigungu_name in place['road_address_name']:
-                seen_places.add(place_id)
-                total_count += 1
-                print(f"스타벅스 이름: {place['place_name']}")
-                print(f"주소: {place['address_name']}")
-                print(f"위도: {place['y']}, 경도: {place['x']}")
-                print('-' * 50)
-    else:
-        print(f"스타벅스 검색 오류: {response.status_code}, Response: {response.text}")
-    return total_count  # 스타벅스 개수 반환
-
-
-# 백화점 검색 함수
-def search_department_store(latitude, longitude, sigungu_name):
-    search_query = '백화점'
-    url = f'https://dapi.kakao.com/v2/local/search/keyword.json?query={search_query}'
-    headers = {
-        "Authorization": f"KakaoAK {api_key}",
-    }
-    params = {
-        "x": longitude,  # 경도
-        "y": latitude,  # 위도
-        "radius": 2000,  # 검색 반경 (단위: 미터)
-    }
-
-    response = requests.get(url, headers=headers, params=params, verify=False)
-    total_count = 0  # 백화점 개수를 셀 변수
-    if response.status_code == 200:
-        data = response.json()
-        places = data['documents']
-        seen_places = set()  # 이미 출력된 장소 고유 ID 기록
-        for place in places:
-            place_id = place['id']
-            # 백화점만 필터링
-            if '백화점' in place['place_name'] and '백화점' in place['category_name'] and place_id not in seen_places and sigungu_name in place['road_address_name']:
-                seen_places.add(place_id)
-                total_count += 1
-                print(f"백화점 이름: {place['place_name']}")
-                print(f"주소: {place['address_name']}")
-                print(f"위도: {place['y']}, 경도: {place['x']}")
-                print('-' * 50)
-    else:
-        print(f"백화점 검색 오류: {response.status_code}, Response: {response.text}")
-    return total_count  # 백화점 개수 반환
-
-
-# 장소 검색을 위한 함수
-def search_places(latitude, longitude, sigungu_name):
-    # 대형마트 검색
-    mart_count = search_category("MT1", "대형마트", latitude=latitude, longitude=longitude, sigungu_name=sigungu_name)
-
-    # 종합병원 검색 (병원 중 종합병원만 필터링)
-    hospital_count = 0
-    page = 1
-    seen_hospitals = set()  # 이미 출력된 병원 고유 ID 기록
-    while True:
-        hospital_url = "https://dapi.kakao.com/v2/local/search/category.json"
-        hospital_params = {
-            "category_group_code": "HP8",  # 병원 카테고리 코드
-            "radius": 2000,  # 검색 반경 (단위: 미터)
-            "x": longitude,  # 경도
-            "y": latitude,  # 위도
-            "page": page,  # 페이지 번호
-        }
-        response = requests.get(hospital_url, params=hospital_params, headers={"Authorization": f"KakaoAK {api_key}"}, verify=False)
-        if response.status_code == 200:
-            data = response.json()
-            places = data['documents']
-            if not places:
-                break
             for place in places:
                 place_id = place['id']
-                # 병원 카테고리가 '종합병원'인 경우만 필터링
-                if (('종합병원' in place['category_name']) or ('대학병원' in place['category_name'])) and place_id not in seen_hospitals and sigungu_name in place['road_address_name']:
-                    seen_hospitals.add(place_id)
-                    hospital_count += 1
-                    print(f"종합병원 이름: {place['place_name']}")
-                    print(f"주소: {place['address_name']}")
-                    print(f"위도: {place['y']}, 경도: {place['x']}")
-                    print('-' * 50)
-            # 페이지가 더 있는지 확인
-            if page * 15 >= data['meta']['total_count']:
-                break
-            page += 1
+                place_name = place['place_name']
+                category_name = place.get('category_name', '')
+                address = place.get('address_name', '정보 없음')
+
+                # allowed_names가 category_name에 포함되면 해당 장소를 추가
+                if category_info["allowed_names"] and not any(name in category_name for name in category_info["allowed_names"]):
+                    continue
+
+                if place_id not in seen_places and address not in seen_addresses and sigungu_name in place.get('road_address_name', ''):
+                    seen_places.add(place_id)
+                    seen_addresses.add(address)
+                    results.append({
+                        "장소 이름": place_name,
+                        "카테고리": category_name,
+                        "주소": address,
+                        "위도": place['y'],
+                        "경도": place['x']
+                    })
+
+            return pd.DataFrame(results)
+        except requests.exceptions.RequestException as e:
+            print(f"요청 오류: {e}")
+            return pd.DataFrame()
+
+    def search_all_categories(self, latitude, longitude, sigungu_name):
+        category_results = {}
+        for category in self.categories:
+            category_results[category] = self.search_places(latitude, longitude, sigungu_name, category)
+        return category_results
+
+    def get_results_for_sgg(self, sido_name, sigungu_names):
+        for sigungu_name in sigungu_names:
+            latitude, longitude = self.get_coordinates_from_sgg(sido_name, sigungu_name)
+            if latitude and longitude:
+                category_results = self.search_all_categories(latitude, longitude, sigungu_name)
+
+                # 카테고리별로 개수를 results 딕셔너리에 저장
+                for category, df in category_results.items():
+                    self.results[category].append(len(df))
+
+                # 카테고리별로 장소 정보를 all_places에 추가
+                for category, df in category_results.items():
+                    for place in df.to_dict(orient="records"):
+                        place["시군구"] = sigungu_name
+                        self.all_places[category].append(place)
+
+        # 각 카테고리별로 장소 정보를 데이터프레임으로 변환하고 출력
+        all_places_df = pd.DataFrame(columns=["카테고리", "시군구", "장소 이름", "주소", "위도", "경도"])
+        for category in self.categories:
+            category_df = pd.DataFrame(self.all_places[category])
+            category_df["카테고리"] = category
+            all_places_df = pd.concat([all_places_df, category_df], ignore_index=True)
+
+        # 랭킹 점수 총합 열 추가
+        final_df = pd.DataFrame(self.results, index=sigungu_names)
+        final_df['랭킹 점수 합계'] = final_df.sum(axis=1)
+
+        return final_df, all_places_df
+
+    def calculate_ranking(self, final_df, sigungu_name):
+        # sigungu_name에 해당하는 행을 선택
+        sigungu_data = final_df.loc[sigungu_name]
+
+        # 백화점과 대형마트가 1 이상인 경우 계산
+        department_store_count = sigungu_data["백화점"] >= 1
+        supermarket_count = sigungu_data["대형마트"] >= 1
+
+        # 등급 판별
+        if department_store_count >= 2:
+            rank = "S"
+        elif department_store_count >= 1:
+            rank = "A"
+        elif supermarket_count >= 1:
+            rank = "B"
         else:
-            print(f"종합병원 검색 오류: {response.status_code}, Response: {response.text}")
-            break
+            rank = "C"
 
-    # 백화점 검색
-    department_store_count = search_department_store(latitude, longitude, sigungu_name)
+        # 결과 반환
+        return {'등급': rank, '백화점 수': department_store_count, '대형마트 수': supermarket_count}
 
-    # 스타벅스 검색
-    starbucks_count = search_starbucks(latitude, longitude, sigungu_name)
-
-    # 각 카테고리의 개수를 출력
-    print(f"총 백화점 개수: {department_store_count}")
-    print(f"총 대형마트 개수: {mart_count}")
-    print(f"총 종합병원 개수: {hospital_count}")
-    print(f"총 스타벅스 개수: {starbucks_count}")
-
-
-# 예시: 부산 연제구의 대형마트, 병원, 백화점, 스타벅스 검색
-sgg_name = ("부산 부산진구")
-latitude, longitude = get_coordinates_from_sgg(sgg_name)
-
-if latitude and longitude:
-    search_places(latitude, longitude, sgg_name)

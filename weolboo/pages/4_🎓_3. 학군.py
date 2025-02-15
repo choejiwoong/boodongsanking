@@ -186,7 +186,7 @@ if st.session_state.fetch_mid_school_achievement:
             🚀 통계지리정보서비스 생활업종 통계지도로 이동
         </a>
         """, unsafe_allow_html=True)
-        st.text_area("📝 학원가 분포 평가")
+        st.text_area("📝 학원가 분포 평가: 교습학원 업종")
 
         st.subheader(f"{st.session_state.selected_sigungu} 학군(초등학교/중학교)")
         # 두 개의 열을 생성

@@ -8,6 +8,7 @@ from crawler_sigungu import *
 from streamlit_db import *
 from bson import ObjectId
 from crawler_hakgun import *
+from crawler_hwangyeong import *
 
 # ==============================================================================
 # 페이지 기본 설정
@@ -125,6 +126,23 @@ if st.button("🎓 학군 데이터 수집", use_container_width=True):
             # 데이터 처리
             st.session_state.process_school_info_data = school_info_api.process_school_info_data(elem_school_data)
             st.success('🎓_3. 학군 데이터 불러오기 완료')
+        else:
+            st.error('☢ 시군구명을 선택해주세요!')
+# ==============================================================================
+# 환경 데이터 수집 버튼
+# ==============================================================================
+if st.button("🏖 환경 데이터 수집", use_container_width=True):
+    with st.spinner('잠시만 기다려주세요. 데이터를 불러오는 중입니다...⏳'):
+        if selected_sigungu != '전체':
+            # 환경 관련 인스턴스 생성
+            place_seacher = PlaceSearcher()
+            # 환경 관련 크롤링
+            sigungu_names = list(st.session_state.sigungu_dict[selected_sido].keys())  # sigungu_names 리스트 생성
+            sigungu_names = [name for name in sigungu_names if name != '전체']  # "전체" 제외
+            final_df, all_places_df = place_seacher.get_results_for_sgg(selected_sido, sigungu_names)
+            st.session_state.hwangyeong_tuple = final_df, all_places_df
+            st.session_state.hwangyeong_ranking = place_seacher.calculate_ranking(final_df, selected_sigungu)
+            st.success('🏖_4. 환경 데이터 불러오기 완료')
         else:
             st.error('☢ 시군구명을 선택해주세요!')
 
