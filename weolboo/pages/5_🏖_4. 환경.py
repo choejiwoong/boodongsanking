@@ -9,6 +9,10 @@ st.set_page_config(
     layout="wide",
 )
 
+# ==============================================================================
+# session_state 초기화
+# ==============================================================================
+
 if 'hwangyeong_tuple' not in st.session_state:
     st.session_state.hwangyeong_tuple = None
 if 'hwangyeong_ranking' not in st.session_state:

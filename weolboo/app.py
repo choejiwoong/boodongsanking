@@ -3,12 +3,13 @@ import pandas as pd
 import numpy as np
 from click import style
 
-from crawler_ingoo import AgePopulationAnalysis
+from crawler_ingoo import *
 from crawler_sigungu import *
 from streamlit_db import *
 from bson import ObjectId
 from crawler_hakgun import *
 from crawler_hwangyeong import *
+from crawler_gyotong import *
 
 # ==============================================================================
 # 페이지 기본 설정
@@ -143,6 +144,35 @@ if st.button("🏖 환경 데이터 수집", use_container_width=True):
             st.session_state.hwangyeong_tuple = final_df, all_places_df
             st.session_state.hwangyeong_ranking = place_seacher.calculate_ranking(final_df, selected_sigungu)
             st.success('🏖_4. 환경 데이터 불러오기 완료')
+        else:
+            st.error('☢ 시군구명을 선택해주세요!')
+# ==============================================================================
+# 교통 데이터 수집 버튼
+# ==============================================================================
+if st.button("🚇 교통 데이터 수집", use_container_width=True):
+    with st.spinner('잠시만 기다려주세요. 데이터를 불러오는 중입니다...⏳'):
+        if selected_sigungu != '전체':
+            # 교통 관련 인스턴스 생성
+            gyotong = Gyotong()
+            # 교통 관련 크롤링
+            api_metadata = gyotong.get_metadata()
+            if api_metadata:
+                latest_year, latest_endpoint = gyotong.find_latest_api(api_metadata)
+                if latest_endpoint:
+                    # 최신 데이터 가져오기
+                    gyotong.fetch_data(latest_endpoint)
+                    # 데이터 처리 및 집계
+                    final_result = gyotong.process_data()
+
+                    if final_result is not None:
+                        st.session_state.gyotong_subway = final_result.head(20) # 상위 20개 데이터 출력
+                    else:
+                        st.error("처리된 데이터가 없습니다.")
+                else:
+                    st.error("최신 엔드포인트를 찾을 수 없습니다.")
+            else:
+                st.error("메타데이터를 가져올 수 없습니다.")
+            st.success('🚇_6. 교통 데이터 불러오기 완료')
         else:
             st.error('☢ 시군구명을 선택해주세요!')
 
