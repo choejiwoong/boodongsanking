@@ -84,35 +84,64 @@ gwangyeok_dict = {
     if "광역시" in sido and "전체" in sigungu_dict  # '광역시' 포함 + '전체' 키가 있는 경우만
 }
 
-st.subheader("데이터 수집")
+
 if st.button("😊 인구 데이터 수집", use_container_width=True):
     with st.spinner('잠시만 기다려주세요. 데이터를 불러오는 중입니다...⏳'):
         if selected_sigungu != '전체':
+            # ==============================================================================
+            # 광역시별 인구 데이터
+            # ==============================================================================
             code_gwangyeok = AgePopulationAnalysis(gwangyeok_dict=gwangyeok_dict)
             get_age_population_data_gwangyeok = code_gwangyeok.get_age_population_data()
             st.session_state.get_age_population_data_gwangyeok = get_age_population_data_gwangyeok
             # 세대수
-            get_population_data = code.get_population_data()
+            get_population_data_gwangyeok = code_gwangyeok.get_population_data()
             result_df = get_age_population_data_gwangyeok[['전체']].copy()  # '전체' 열만 가져오고 복사
             result_df = result_df.rename(columns={'전체': '총인구수'})  # '전체' 열을 '총인구수'로 변경
-            result_df['세대수'] = get_population_data['수치값']  # '세대수' 열 추가
+            result_df['세대수'] = get_population_data_gwangyeok['수치값']  # '세대수' 열 추가
             result_df['세대당 인구수'] = result_df['총인구수'] / result_df['세대수']  # '총인구수'를 '세대수'으로 나눈 새로운 열 추가
-            st.session_state.pop_div_saedae_gwangyeok = result_df
-            get_population_plotly_gwangyeok = code_gwangyeok.get_population_plotly(result_df)
-            st.session_state.get_population_plotly_gwangyeok = get_population_plotly_gwangyeok
+            st.session_state.pop_div_saedae_hdong = result_df
+            st.session_state.get_population_plotly_gwangyeok = code_gwangyeok.get_population_plotly(result_df)
+            st.session_state.get_age_population_plotly_gwangyeok = code_gwangyeok.get_age_population_plotly(get_age_population_data_gwangyeok)
+            st.success('😊_1. 인구/광역시별 인구 데이터 불러오기 완료')
+            # ==============================================================================
+            # 시군구별 인구 데이터
+            # ==============================================================================
+            sigungu_dict = st.session_state.sigungu_dict[selected_sido]
+            sigungu_dict_filtered = {key: value['전체'] for key, value in sigungu_dict.items() if isinstance(value, dict)}
+            code_sigungu = AgePopulationAnalysis(sigungu_dict=sigungu_dict_filtered)
+            get_age_population_data_sigungu = code_sigungu.get_age_population_data()
+            st.session_state.get_age_population_data_sigungu = get_age_population_data_sigungu
+            # 세대수
+            get_population_data_sigungu = code_sigungu.get_population_data()
 
-            get_age_population_plotly_gwangyeok = code_gwangyeok.get_age_population_plotly(get_age_population_data_gwangyeok)
-            st.session_state.get_age_population_plotly_gwangyeok = get_age_population_plotly_gwangyeok
-            # 특정 시군구의 행정동
+            result_df = get_age_population_data_sigungu[['전체']].copy()  # '전체' 열만 가져오고 복사
+            result_df = result_df.rename(columns={'전체': '총인구수'})  # '전체' 열을 '총인구수'로 변경
+            result_df['세대수'] = get_population_data_sigungu['수치값']  # '세대수' 열 추가
+            result_df['세대당 인구수'] = result_df['총인구수'] / result_df['세대수']  # '총인구수'를 '세대수'으로 나눈 새로운 열 추가
+            st.session_state.pop_div_saedae_sigungu = result_df
+            st.session_state.get_population_plotly_sigungu = code_sigungu.get_population_plotly(result_df)
+            st.session_state.get_age_population_plotly_sigungu = code_sigungu.get_age_population_plotly(get_age_population_data_sigungu)
+            st.success('😊_1. 인구/시군구별 인구 데이터 불러오기 완료')
+            # ==============================================================================
+            # 행정동별 인구 데이터
+            # ==============================================================================
             selected_sido = st.session_state.selected_sido
             selected_sigungu = st.session_state.selected_sigungu
             hdong_dict = st.session_state.sigungu_dict[selected_sido][selected_sigungu]
             code_hdong = AgePopulationAnalysis(hdong_dict=hdong_dict)
-            get_age_population_data_sigungu = code_hdong.get_age_population_data()
-            st.session_state.get_age_population_data_sigungu = get_age_population_data_sigungu
-            get_age_population_plotly_sigungu = code_hdong.get_age_population_plotly(get_age_population_data_sigungu)
-            st.session_state.get_age_population_plotly_sigungu = get_age_population_plotly_sigungu
-            st.success('😊_1. 인구/연령대별 인구수 데이터 불러오기 완료')
+            get_age_population_data_hdong = code_hdong.get_age_population_data()
+            st.session_state.get_age_population_data_hdong = get_age_population_data_hdong
+            st.session_state.get_age_population_plotly_hdong = code_hdong.get_age_population_plotly(get_age_population_data_hdong)
+            # # 세대수
+            # get_population_data_hdong = code_hdong.get_population_data()
+            # result_df = get_age_population_data_hdong[['전체']].copy()  # '전체' 열만 가져오고 복사
+            # result_df = result_df.rename(columns={'전체': '총인구수'})  # '전체' 열을 '총인구수'로 변경
+            # result_df['세대수'] = get_population_data_hdong['수치값']  # '세대수' 열 추가
+            # result_df['세대당 인구수'] = result_df['총인구수'] / result_df['세대수']  # '총인구수'를 '세대수'으로 나눈 새로운 열 추가
+            # st.session_state.pop_div_saedae_hdong = result_df
+            # st.session_state.get_population_plotly_hdong = code_hdong.get_population_plotly(result_df)
+            st.success('😊_1. 인구/행정동별 인구 데이터 불러오기 완료')
         else:
             st.error('☢ 시군구명을 선택해주세요!')
 # ==============================================================================
