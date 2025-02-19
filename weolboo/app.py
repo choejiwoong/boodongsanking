@@ -37,7 +37,7 @@ if find_documents(collection_sigungu, query):
     # sigungu_dict session_state에 저장
     if 'sigungu_dict' not in st.session_state or st.session_state.sigungu_dict != sigungu_dict[0]:
         st.session_state.sigungu_dict = sigungu_dict[0]
-        print(sigungu_dict[0])
+        # print(sigungu_dict[0])
 
     # 도시 선택 selectedbox
     selected_sido = st.selectbox('도시를 선택하세요.', list(sigungu_dict[0].keys()), index=1)
@@ -83,6 +83,7 @@ gwangyeok_dict = {
     for sido, sigungu_dict in st.session_state.sigungu_dict.items()
     if "광역시" in sido and "전체" in sigungu_dict  # '광역시' 포함 + '전체' 키가 있는 경우만
 }
+
 st.subheader("데이터 수집")
 if st.button("😊 인구 데이터 수집", use_container_width=True):
     with st.spinner('잠시만 기다려주세요. 데이터를 불러오는 중입니다...⏳'):
@@ -90,6 +91,16 @@ if st.button("😊 인구 데이터 수집", use_container_width=True):
             code_gwangyeok = AgePopulationAnalysis(gwangyeok_dict=gwangyeok_dict)
             get_age_population_data_gwangyeok = code_gwangyeok.get_age_population_data()
             st.session_state.get_age_population_data_gwangyeok = get_age_population_data_gwangyeok
+            # 세대수
+            get_population_data = code.get_population_data()
+            result_df = get_age_population_data_gwangyeok[['전체']].copy()  # '전체' 열만 가져오고 복사
+            result_df = result_df.rename(columns={'전체': '총인구수'})  # '전체' 열을 '총인구수'로 변경
+            result_df['세대수'] = get_population_data['수치값']  # '세대수' 열 추가
+            result_df['세대당 인구수'] = result_df['총인구수'] / result_df['세대수']  # '총인구수'를 '세대수'으로 나눈 새로운 열 추가
+            st.session_state.pop_div_saedae_gwangyeok = result_df
+            get_population_plotly_gwangyeok = code_gwangyeok.get_population_plotly(result_df)
+            st.session_state.get_population_plotly_gwangyeok = get_population_plotly_gwangyeok
+
             get_age_population_plotly_gwangyeok = code_gwangyeok.get_age_population_plotly(get_age_population_data_gwangyeok)
             st.session_state.get_age_population_plotly_gwangyeok = get_age_population_plotly_gwangyeok
             # 특정 시군구의 행정동
@@ -154,7 +165,11 @@ if st.button("🚇 교통 데이터 수집", use_container_width=True):
         if selected_sigungu != '전체':
             # 교통 관련 인스턴스 생성
             gyotong = Gyotong()
-            # 교통 관련 크롤링
+            # 지하철 버스 수송분담률 관련 크롤링
+            st.session_state.fetch_transport_data = gyotong.fetch_transport_data()
+            st.session_state.get_transport_div_plotly = gyotong.get_transport_div_plotly(st.session_state.fetch_transport_data)
+
+            # 지하철 교통 관련 크롤링
             api_metadata = gyotong.get_metadata()
             if api_metadata:
                 latest_year, latest_endpoint = gyotong.find_latest_api(api_metadata)

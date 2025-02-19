@@ -2,6 +2,10 @@ import requests
 import pandas as pd
 import re
 import urllib3
+from bs4 import BeautifulSoup
+import plotly.express as px
+import streamlit as st
+
 # 지하철 데이터는 여기 참고: https://www.data.go.kr/data/3057229/fileData.do#/
 # 지하철, 버스 이용률 데이터는 여기 참고: https://stcis.go.kr/pivotIndi/wpsPivotIndicator.do?siteGb=P&indiClss=IC01
 
@@ -113,58 +117,181 @@ class Gyotong:
         else:
             return None
 
+    def fetch_transport_data(self):
+        """응용 지표(대중교통 수단간 분담률) 데이터 가져오기"""
+        # 요청 URL
+        url = "https://stcis.go.kr/pivotIndi/indicatorAjax.do"
+
+        # 요청 페이로드 (데이터)
+        params = {
+            "indiCd": "Z01715",
+            "siteGb": "P",
+            "indiNm": "응용 지표(대중교통 수단간 분담률)",
+            "searchDateGubun": "1",
+            "searchFromYear": "2024",
+            "searchToYear": "2024",
+            "searchFromMonth": "2025-01",
+            "searchToMonth": "2025-01",
+            "searchFromDay": "2025-01-31",
+            "searchFromDayDD": "20250131",
+            "searchToDay": "2025-01-31",
+            "searchAreaGubun": "1",
+            "zoneSd": "11,26,27,28,29,30,31,36,41,43,44,45,46,47,48,50,51,52",
+            "zoneSgg": "",
+            "zoneEmd": "",
+            "zoneDstrct": "",
+            "selectZoneSd": "",
+            "selectZoneSgg": "",
+            "tcboId": "",
+            "excclcAreaCd": "",
+            "routeId": "",
+            "routeSdCd": "",
+            "routeSggCd": "",
+            "tcboIdSttn": "",
+            "excclcAreaCdSttn": "",
+            "sttnId": "",
+            "sttnIdGrp": "",
+            "sttnSdCd": "",
+            "sttnSggCd": "",
+            "searchODAreaGubun": "",
+            "searchODAreaGubun_2": "",
+            "rdStgptSel": "Y",
+            "searchStgptZoneSd": "",
+            "searchStgptZoneSgg": "",
+            "searchStgptZoneEmd": "",
+            "rdAlocSel": "Y",
+            "searchAlocZoneSd": "",
+            "searchAlocZoneSgg": "",
+            "searchAlocZoneEmd": "",
+            "pgngYn": "Y",
+            "daybyTblNm": "DM_WAYTRCV_001",
+            "mnbyTblNm": "DM_MMBY_WAYTRCV_001",
+            "yrbyTblNm": "DM_YRBY_WAYTRCV_001",
+            "dstrctTblNm": "DM_DCTBY_WAYTRCV_T",
+            "mnbyDstrctTblNm": "DM_MMBY_DCTBY_WAYTRCV_T",
+            "yrbyDstrctTblNm": "DM_YRBY_DCTBY_WAYTRCV_T"
+        }
+
+        # 요청 헤더
+        headers = {
+            "Content-Type": "application/x-www-form-urlencoded",
+        }
+
+        # POST 요청 보내기
+        response = requests.get(url, params=params, headers=headers, verify=False)
+
+        # 응답 데이터 확인
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.text, "html.parser")
+
+            # 테이블 찾기
+            table = soup.find("table", {"class": "main_tb"})
+
+            # # 테이블 헤더 추출
+            # headers = [th.text.strip() for th in table.find_all("td", class_="header_style")]
+
+            # 새로운 헤더 목록 정의
+            filtered_headers = ['시도', '시내', '시외', '좌석', '마을', '광역', '농어촌', '공항', '도시철도', '기타']
+
+            # 데이터 추출
+            data = []
+            rows = table.find_all("tr")[2:]  # 첫 두 개는 헤더 관련, 실제 데이터는 3번째 행부터
+
+            for row in rows:
+                cols = [td.text.strip() for td in row.find_all("td")]
+                if cols:
+                    data.append(cols)
+
+            cleaned_data = []
+            for i, row in enumerate(data):
+                if i == 0:  # 첫 번째 행만 수정
+                    cleaned_data.append(row[1:])  # 첫 번째 열 제외하고 나머지 열만 추가
+                else:  # 나머지는 그대로 추가
+                    cleaned_data.append(row)  # 첫 번째 열 제외하고 나머지 열만 추가
+
+            # 데이터프레임 생성
+            df_filtered = pd.DataFrame(cleaned_data, columns=filtered_headers)
+
+            # '도시철도'와 '기타' 열을 숫자형으로 변환
+            df_filtered['도시철도'] = pd.to_numeric(df_filtered['도시철도'], errors='coerce')
+            df_filtered['기타'] = pd.to_numeric(df_filtered['기타'], errors='coerce')
+            # '버스' 열 계산 (100 - (도시철도 + 기타))
+            df_filtered['버스'] = 100 - (df_filtered['도시철도'] + df_filtered['기타'])
+            # '시도', '버스', '도시철도', '기타' 열만 선택하여 출력
+            df_filtered = df_filtered[['시도', '버스', '도시철도', '기타']]
+            # '시도', '버스', '도시철도', '기타' 열만 선택하고 '도시철도' 내림차순 정렬
+            df_filtered = df_filtered[['시도', '버스', '도시철도', '기타']].sort_values(by='도시철도', ascending=False)
+
+            # 결과 출력
+            return df_filtered
+        else:
+            print(f"요청 실패: {response.status_code}")
+            return None
+
+    def get_transport_div_plotly(self, df):
+        if df is None:
+            st.write("데이터를 가져올 수 없습니다.")
+            return None
+        # 색상 매핑
+        color_map = px.colors.qualitative.Pastel1  # 또는 Pastel2
+        # Streamlit에서 DataFrame 출력
+        if not df.empty:
+            # 시군구별 누적 막대 그래프 그리기
+            fig = px.bar(df,
+                         x='시도',
+                         y=['버스', '도시철도', '기타'],
+                         labels={"value": "교통수단 비율(%)", "variable": "교통수단"},
+                         color_discrete_sequence=color_map,
+                         # text=flattened_text,  # Use flattened text values
+                         barmode='stack')
+            return fig
+
 
 # if __name__ == "__main__":
 #     # DataCollector 객체 생성
 #     collector = Gyotong()
 #
 #     # 메타데이터 가져오기
-#     api_metadata = collector.get_metadata()
+#     fetch_transport_data = collector.fetch_transport_data()
+#     print(fetch_transport_data)
+
+
+############## 이 코드는 회사에서 안돌아감... 집에서 해야겠당
+# import requests
 #
-#     if api_metadata:
-#         latest_year, latest_endpoint = collector.find_latest_api(api_metadata)
-#         if latest_endpoint:
-#             # 최신 데이터 가져오기
-#             collector.fetch_data(latest_endpoint)
-#             # 데이터 처리 및 집계
-#             final_result = collector.process_data()
+# # 카카오맵 API 키
+# KAKAO_API_KEY = "d7514f12a0f0d5e317dc677c7bcd97af"
 #
-#             if final_result is not None:
-#                 print(final_result.head(20))  # 상위 20개 데이터 출력
-#             else:
-#                 print("처리된 데이터가 없습니다.")
-#         else:
-#             print("최신 엔드포인트를 찾을 수 없습니다.")
-#     else:
-#         print("메타데이터를 가져올 수 없습니다.")
-
-
-# 요청 보내기
-url = "https://stcis.go.kr/pivotIndi/excelSearchCntAdd.do"
-
-headers = {
-    "Content-Type": "application/x-www-form-urlencoded",
-}
-
-payload = {
-    "indiCd": "Z01701",
-    "searchAreaGubun": "2",
-    "siteGb": "P",
-    "zoneSd": "26",
-    "zoneSgg": "26440,26410,26710,26290,26170,26260,26230,26320,26530,26380,26140,26500,26470,26200,26110,26350",
-    "zoneDstrct": "",
-    "selectZoneSd": "26",
-    "selectZoneSgg": ""
-}
-
-response = requests.post(url, headers=headers, data=payload, verify=False)
-
-if response.status_code == 200:
-    print(response)
-#     with open("data.xlsx", "wb") as f:
-#         f.write(response.content)
-#     # 엑셀 파일을 pandas DataFrame으로 읽기
-#     df = pd.read_excel("data.xlsx")
-#     print(df.head())  # 첫 5개 행 출력
+# # 출발지와 도착지의 좌표
+# origin_coords = (127.008308, 37.577223)  # 예시 출발지 (경도, 위도)
+# destination_coords = (127.030339, 37.600160)  # 예시 도착지 (경도, 위도)
+#
+# # 카카오맵 API 요청 URL
+# url = "https://apis.openapi.kakao.com/v2/local/route.json"
+#
+# # 요청 헤더 (API 키 포함)
+# headers = {
+#     "Authorization": f"KakaoAK {KAKAO_API_KEY}"
+# }
+#
+# # 요청 파라미터 (출발지, 도착지 좌표)
+# params = {
+#     "originX": origin_coords[0],
+#     "originY": origin_coords[1],
+#     "destinationX": destination_coords[0],
+#     "destinationY": destination_coords[1],
+#     "vehicle_type": "car"  # 자차 이용 경로를 요청
+# }
+#
+# # API 요청
+# response = requests.get(url, headers=headers, params=params, verify=False, timeout=10)
+#
+# # 응답 확인
+# if response.status_code == 200:
+#     data = response.json()
+#     travel_time = data['route']['summary']['duration']  # 자차 이용 시간 (초 단위)
+#     print(f"자차 이용 시간: {travel_time}초")
 # else:
-#     print(f"요청 실패: {response.status_code}")
+#     print(f"API 요청 실패: {response.status_code}")
+
+

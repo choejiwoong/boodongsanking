@@ -7,6 +7,9 @@ from datetime import datetime
 import streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go
+import requests
+from plotly.subplots import make_subplots
+
 
 class AgePopulationAnalysis:
     def __init__(self, service_key: str = "YWZhOWE3ZjgxYzY0YThkYWRmMDgyYzQzZDZjMjM2NTk=", gwangyeok_dict: dict = None, sigungu_dict: dict = None, hdong_dict: dict = None):
@@ -152,7 +155,6 @@ class AgePopulationAnalysis:
             # 그래프 표시
             return fig
         else:
-            st.write("데이터를 가져올 수 없습니다.")
             return None
 
 
@@ -164,40 +166,143 @@ class AgePopulationAnalysis:
         data = []  # 광역시명, 연령대, 수치값을 저장할 리스트
         orgId = "101"  # 기관ID
         tblId = "DT_1B040B3"  # 통계표ID
-        itmId = "T2"  # 총인구수 항목
+        # objL1 = "26470" # 시군구 코드
+        itmId = "ALL"  # 총인구수 항목
         prdSe = "Y"  # 수록주기
         max_year = self.get_latest_year(orgId, tblId)
-        # df = self.api.get_data(
-        #     "KOSIS통합검색",
-        #     searchNm="주민등록 세대수"
-        # )
-        # print(df.head(1))
 
-        item = self.api.get_data(
-            "통계표설명",
-            "분류항목",
-            orgId=orgId,
-            tblId=tblId,
-        )
-        print(item)
+        if self.gwangyeok_dict:
+            for gwangyeok_name, gwangyeok_code in self.gwangyeok_dict.items():
+                df = self.api.get_data(
+                    service_name="통계자료",  # 서비스명: '통계자료'로 수정
+                    orgId=orgId,  # 기관 ID: '101'은 해당 통계를 제공하는 기관 ID
+                    tblId=tblId,  # 통계표 ID: 통계표 ID는 실제 통계 표에 해당하는 고유 ID (예: 'DT_1B040B3')
+                    objL1=gwangyeok_code,  # 분류ID: 'A'는 행정구역별 통계 자료를 요청하는 항목
+                    itmId=itmId,  # 분류값ID: 'T1'은 세대수와 관련된 항목
+                    prdSe=prdSe,  # 수록주기: 'Y'는 연간 기준 데이터 요청
+                    startPrdDe=max_year,  # 시작 기간: '202211'은 2022년 11월
+                    endPrdDe=max_year,  # 종료 기간: 동일한 2022년 11월
+                )
+                if df is not None and not df.empty:
+                    value = df['수치값'].sum()
+                    data.append({
+                        '구분': gwangyeok_name,
+                        '수치값': value
+                    })
+        if self.sigungu_dict:
+            for sigungu_name, sigungu_code in self.sigungu_dict.items():
+                df = self.api.get_data(
+                    service_name="통계자료",  # 서비스명: '통계자료'로 수정
+                    orgId=orgId,  # 기관 ID: '101'은 해당 통계를 제공하는 기관 ID
+                    tblId=tblId,  # 통계표 ID: 통계표 ID는 실제 통계 표에 해당하는 고유 ID (예: 'DT_1B040B3')
+                    objL1=sigungu_code,  # 분류ID: 'A'는 행정구역별 통계 자료를 요청하는 항목
+                    itmId=itmId,  # 분류값ID: 'T1'은 세대수와 관련된 항목
+                    prdSe=prdSe,  # 수록주기: 'Y'는 연간 기준 데이터 요청
+                    startPrdDe=max_year,  # 시작 기간: '202211'은 2022년 11월
+                    endPrdDe=max_year,  # 종료 기간: 동일한 2022년 11월
+                )
+                if df is not None and not df.empty:
+                    value = df['수치값'].sum()
+                    data.append({
+                        '구분': sigungu_name,
+                        '수치값': value
+                    })
+        if self.hdong_dict:
+            for hdong_name, hdong_code in self.hdong_dict.items():
+                df = self.api.get_data(
+                    service_name="통계자료",  # 서비스명: '통계자료'로 수정
+                    orgId=orgId,  # 기관 ID: '101'은 해당 통계를 제공하는 기관 ID
+                    tblId=tblId,  # 통계표 ID: 통계표 ID는 실제 통계 표에 해당하는 고유 ID (예: 'DT_1B040B3')
+                    objL1=hdong_code,  # 분류ID: 'A'는 행정구역별 통계 자료를 요청하는 항목
+                    itmId=itmId,  # 분류값ID: 'T1'은 세대수와 관련된 항목
+                    prdSe=prdSe,  # 수록주기: 'Y'는 연간 기준 데이터 요청
+                    startPrdDe=max_year,  # 시작 기간: '202211'은 2022년 11월
+                    endPrdDe=max_year,  # 종료 기간: 동일한 2022년 11월
+                )
+                if df is not None and not df.empty:
+                    value = df['수치값'].sum()
+                    data.append({
+                        '구분': hdong_name,
+                        '수치값': value
+                    })
+        # 데이터가 없는 경우 대비
+        if not data:
+            print("⚠️ 결과 데이터가 없습니다. API 응답을 확인하세요.")
+            return pd.DataFrame()
+        result_df = pd.DataFrame(data)
+        result_df['수치값'] = pd.to_numeric(result_df['수치값'], errors='coerce')
+        result_df.set_index('구분', inplace=True)
 
-        # # 예시: 통계자료 요청 수정 / 참고: https://www.kosis.kr/openapi/devGuide/devGuide_0201List.do
-        # df = self.api.get_data(
-        #     service_name="통계자료",  # 서비스명: '통계자료'로 수정
-        #     orgId="101",  # 기관 ID: '101'은 해당 통계를 제공하는 기관 ID
-        #     tblId="DT_1B040B3",  # 통계표 ID: 통계표 ID는 실제 통계 표에 해당하는 고유 ID (예: 'DT_1B040B3')
-        #     objL1="11110",  # 분류값 ID 1: 'A'는 행정구역별 통계 자료를 요청하는 항목
-        #     itmId="ITEM",  # 항목 ID: 'T1'은 세대수와 관련된 항목
-        #     prdSe="Y",  # 수록주기: 'Y'는 연간 기준 데이터 요청
-        #     startPrdDe="2022",  # 시작 기간: '202211'은 2022년 11월
-        #     endPrdDe="2022",  # 종료 기간: 동일한 2022년 11월
-        # )
-        # print(df)
+        return result_df
 
-    # def get_population_data(self):
-    #     print(self.population_dict)
-    #     # 데이터를 DataFrame 형태로 반환
-    #     return pd.DataFrame(data=self.population_dict)
+    # ==============================================================================
+    # 광역시별 / 시군구별 / 시도 시군구 읍면동별 총인구수, 세대수, 세대당 인구 그래프 그리기
+    # ==============================================================================
+    def get_population_plotly(self, df):
+        if df is None:
+            st.write("데이터를 가져올 수 없습니다.")
+            return None
+        # 연령대별 색상 매핑
+        color_map = px.colors.qualitative.Pastel1  # 색상 맵
+        # NaN 값을 0으로 대체 (또는 다른 값으로 처리)
+        df.fillna(0, inplace=True)
+        # 시군구별 누적 막대 그래프 그리기
+        if not df.empty:
+            # 두 개의 y축을 사용하여 각각 다른 데이터 시각화
+            fig = make_subplots(
+                rows=1, cols=1,
+                shared_xaxes=True,  # x축 공유
+                vertical_spacing=0.1,
+                specs=[[{"secondary_y": True}]]  # 두 번째 y축 추가
+            )
+
+            # 막대 그래프: 총인구수와 세대수
+            fig.add_trace(
+                go.Bar(
+                    x=df.index,
+                    y=df['총인구수'],
+                    name='총인구수',
+                    marker=dict(color=color_map[0]),
+                ),
+                secondary_y=False  # 첫 번째 y축 사용
+            )
+
+            fig.add_trace(
+                go.Bar(
+                    x=df.index,
+                    y=df['세대수'],
+                    name='세대수',
+                    marker=dict(color=color_map[1]),
+                ),
+                secondary_y=False  # 첫 번째 y축 사용
+            )
+
+            # 꺾은선 그래프: 세대당 인구수
+            fig.add_trace(
+                go.Scatter(
+                    x=df.index,
+                    y=df['세대당 인구수'],
+                    mode='lines+markers',
+                    name='세대당 인구수',
+                    line=dict(color='green'),
+                    text=df['세대당 인구수'].round(1),
+                    textposition='top center'
+                ),
+                secondary_y=True  # 두 번째 y축 사용
+            )
+
+            # 그래프 레이아웃 업데이트
+            fig.update_layout(
+                title="인구, 세대, 세대 당 인구수",
+                yaxis_title="인구수, 세대수",  # 첫 번째 y축 제목
+                yaxis2_title="세대당 인구수",  # 두 번째 y축 제목
+                template='plotly_white',  # 배경을 흰색으로 설정
+                showlegend=True
+            )
+            return fig
+
+        else:
+            return None
 
 
 # 용례
@@ -209,7 +314,9 @@ pd.set_option('display.max_colwidth', None)  # 열의 최대 너비를 제한하
 # sido_name = "부산광역시"
 # sigungu_name = "연제구"
 
-code = AgePopulationAnalysis()
+gwangyeok_dict = {'부산광역시': '26', '대구광역시': '27', '인천광역시': '28', '광주광역시': '29', '대전광역시': '30', '울산광역시': '31'}
+
+code = AgePopulationAnalysis(gwangyeok_dict=gwangyeok_dict)
 #
 # print(code.get_age_population_data(0,))
 # code = SigunguCode(sido_name, sigungu_name)
@@ -221,5 +328,40 @@ code = AgePopulationAnalysis()
 # print(code.get_gwangyeok_dict())
 # print(code.get_sigungu_dict())
 # print(code.get_hdong_dict())
+# print(code.get_population_data())
 
-code.get_population_data()
+#
+#
+# # 기본 URL
+# data = []  # 광역시명, 연령대, 수치값을 저장할 리스트
+# orgId = "101"  # 기관ID
+# tblId = "DT_1B040B3"  # 통계표ID
+# itmId = "T2"  # 총인구수 항목
+# prdSe = "Y"  # 수록주기
+# max_year = "2024"
+# # df = self.api.get_data(
+# #     "KOSIS통합검색",
+# #     searchNm="주민등록 세대수"
+# # )
+# # print(df.head(1))
+# api = Kosis("YWZhOWE3ZjgxYzY0YThkYWRmMDgyYzQzZDZjMjM2NTk=")
+# item = api.get_data(
+#     "통계표설명",
+#     "분류항목",
+#     orgId=orgId,
+#     tblId=tblId,
+# )
+# print(item)
+#
+# # 여기 참고: https://github.com/WooilJeong/PublicDataReader/blob/main/assets/docs/kosis/Kosis.md
+# df = api.get_data(
+#     service_name="통계자료",  # 서비스명: '통계자료'로 수정
+#     orgId=orgId,  # 기관 ID: '101'은 해당 통계를 제공하는 기관 ID
+#     tblId=tblId,  # 통계표 ID: 통계표 ID는 실제 통계 표에 해당하는 고유 ID (예: 'DT_1B040B3')
+#     objL1="00",  # 분류ID: 'A'는 행정구역별 통계 자료를 요청하는 항목
+#     itmId="ALL",  # 분류값ID: 'T1'은 세대수와 관련된 항목
+#     prdSe="Y",  # 수록주기: 'Y'는 연간 기준 데이터 요청
+#     startPrdDe="2024",  # 시작 기간: '202211'은 2022년 11월
+#     endPrdDe="2024",  # 종료 기간: 동일한 2022년 11월
+# )
+# print(df)
