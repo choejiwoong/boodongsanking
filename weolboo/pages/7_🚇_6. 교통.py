@@ -72,29 +72,30 @@ else:
     """, unsafe_allow_html=True)
     st.text_area("📝 교통호재 평가")
 
+    # ranking으로 걸려면 kakaomap api 해봐야함
+    # if st.session_state.mid_school_achievement_ranking:
+    # st.subheader(f"교통 SUMMARY: {st.session_state.mid_school_achievement_ranking['등급']}")
+    st.subheader(f"교통 SUMMARY")
+    # 두 개의 열을 생성
+    col1, col2 = st.columns(2)
+    # 높이 설정
+    height = 600
+    with col1:
+        st.text_area("교통의 가치가 있는 도시인가?")
+    with col2:
+        st.text_area("교통호재? 실현가능성? 입지가 좋아지는가?")
+    # # HTML 및 CSS를 사용하여 text_area 스타일 변경
+    # st.markdown(
+    #     """
+    #     <style>
+    #     /* 마지막 text_area만 스타일 적용 */
+    #     .stTextArea:nth-of-type(4) textarea {
+    #         background-color: #FFD700;  /* 노란 배경색 */
+    #     }
+    #     </style>
+    #     """,
+    #     unsafe_allow_html=True
+    # )
+    st.text_area("SUMMARY")
 
-# ranking으로 걸려면 kakaomap api 해봐야함
-# if st.session_state.mid_school_achievement_ranking:
-# st.subheader(f"교통 SUMMARY: {st.session_state.mid_school_achievement_ranking['등급']}")
-st.subheader(f"교통 SUMMARY")
-# 두 개의 열을 생성
-col1, col2 = st.columns(2)
-# 높이 설정
-height = 600
-with col1:
-    st.text_area("교통의 가치가 있는 도시인가?")
-with col2:
-    st.text_area("교통호재? 실현가능성? 입지가 좋아지는가?")
-# # HTML 및 CSS를 사용하여 text_area 스타일 변경
-# st.markdown(
-#     """
-#     <style>
-#     /* 마지막 text_area만 스타일 적용 */
-#     .stTextArea:nth-of-type(4) textarea {
-#         background-color: #FFD700;  /* 노란 배경색 */
-#     }
-#     </style>
-#     """,
-#     unsafe_allow_html=True
-# )
-st.text_area("SUMMARY")
+

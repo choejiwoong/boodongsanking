@@ -257,41 +257,76 @@ class Gyotong:
 
 
 ############## 이 코드는 회사에서 안돌아감... 집에서 해야겠당
-# import requests
-#
-# # 카카오맵 API 키
-# KAKAO_API_KEY = "d7514f12a0f0d5e317dc677c7bcd97af"
-#
-# # 출발지와 도착지의 좌표
-# origin_coords = (127.008308, 37.577223)  # 예시 출발지 (경도, 위도)
-# destination_coords = (127.030339, 37.600160)  # 예시 도착지 (경도, 위도)
-#
-# # 카카오맵 API 요청 URL
-# url = "https://apis.openapi.kakao.com/v2/local/route.json"
-#
-# # 요청 헤더 (API 키 포함)
-# headers = {
-#     "Authorization": f"KakaoAK {KAKAO_API_KEY}"
-# }
-#
-# # 요청 파라미터 (출발지, 도착지 좌표)
-# params = {
-#     "originX": origin_coords[0],
-#     "originY": origin_coords[1],
-#     "destinationX": destination_coords[0],
-#     "destinationY": destination_coords[1],
-#     "vehicle_type": "car"  # 자차 이용 경로를 요청
-# }
-#
-# # API 요청
-# response = requests.get(url, headers=headers, params=params, verify=False, timeout=10)
-#
-# # 응답 확인
-# if response.status_code == 200:
-#     data = response.json()
-#     travel_time = data['route']['summary']['duration']  # 자차 이용 시간 (초 단위)
-#     print(f"자차 이용 시간: {travel_time}초")
-# else:
-#     print(f"API 요청 실패: {response.status_code}")
+import requests
+
+# 카카오맵 API 키
+KAKAO_API_KEY = "d7514f12a0f0d5e317dc677c7bcd97af"
+
+# 카카오맵 장소 검색 API URL
+SEARCH_URL = "https://dapi.kakao.com/v2/local/search/keyword.json"
+DIRECTIONS_URL = "https://apis-navi.kakaomobility.com/v1/directions"
+
+
+# 장소 이름을 좌표로 변환하는 함수
+def get_coordinates(place_name):
+    headers = {"Authorization": f"KakaoAK {KAKAO_API_KEY}"}
+    params = {"query": place_name}
+
+    response = requests.get(SEARCH_URL, headers=headers, params=params, timeout=10)
+
+    if response.status_code == 200:
+        data = response.json()
+        if data['documents']:
+            place = data['documents'][0]
+            return float(place['x']), float(place['y'])  # (경도, 위도)
+        else:
+            print(f"장소 '{place_name}'를 찾을 수 없습니다.")
+            return None
+    else:
+        print(f"장소 검색 API 요청 실패: {response.status_code}")
+        return None
+
+
+# 출발지와 도착지 입력
+origin_name = "부산 종합운동장역"
+destination_name = "서면역"
+
+# 좌표 검색
+origin_coords = get_coordinates(origin_name)
+destination_coords = get_coordinates(destination_name)
+
+if origin_coords and destination_coords:
+    # 길찾기 API 요청
+    headers = {"Authorization": f"KakaoAK {KAKAO_API_KEY}"}
+    params = {
+        "origin": f"{origin_coords[0]},{origin_coords[1]}",
+        "destination": f"{destination_coords[0]},{destination_coords[1]}",
+        "priority": "RECOMMEND",
+        "car_fuel": "GASOLINE",
+        "car_hipass": False,
+    }
+
+    response = requests.get(DIRECTIONS_URL, headers=headers, params=params, timeout=10)
+
+    if response.status_code == 200:
+        data = response.json()
+        if data['routes'][0]['result_code'] == 0:
+            distance = data['routes'][0]['summary']['distance']
+            duration = data['routes'][0]['summary']['duration']
+
+            hours = duration // 3600  # 시간
+            minutes = (duration % 3600) // 60  # 분
+            seconds = duration % 60  # 초
+
+            # 출력
+            print(f"출발지: {origin_name} ({origin_coords})")
+            print(f"도착지: {destination_name} ({destination_coords})")
+            print(f"경로 거리: {distance / 1000:.2f}km")
+            print(f"예상 소요 시간: {duration}초 ({hours}시간 {minutes}분 {seconds}초)")
+        else:
+            print("길찾기 API에서 결과를 찾을 수 없습니다.")
+    else:
+        print(f"길찾기 API 요청 실패: {response.status_code}")
+
 
 

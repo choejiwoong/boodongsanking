@@ -327,79 +327,23 @@ class AgePopulationAnalysis:
         else:
             return None
 
-
-# 용례
-# 최대 출력할 행 수와 열 수 설정
-pd.set_option('display.max_rows', None)  # 모든 행 출력
-pd.set_option('display.max_columns', None)  # 모든 열 출력
-pd.set_option('display.width', None)  # 출력 너비 제한 없애기
-pd.set_option('display.max_colwidth', None)  # 열의 최대 너비를 제한하지 않음
-# sido_name = "부산광역시"
-# sigungu_name = "연제구"
-
-# gwangyeok_dict = {'부산광역시': '26', '대구광역시': '27', '인천광역시': '28', '광주광역시': '29', '대전광역시': '30', '울산광역시': '31'}
-# sigungu_dict = {'중구': '2611000000', '서구': '2614000000', '동구': '2617000000', '영도구': '2620000000', '부산진구': '2623000000', '동래구': '2626000000', '남구': '2629000000', '북구': '2632000000', '해운대구': '2635000000', '사하구': '2638000000', '금정구': '2641000000', '강서구': '2644000000', '연제구': '2647000000', '수영구': '2650000000', '사상구': '2653000000', '기장군': '2671000000'}
-hdong_dict = {'전체': '2647000000', '거제제1동': '2647061000', '거제제2동': '2647062000', '거제제3동': '2647063000', '거제제4동': '2647064000', '연산제1동': '2647065000', '연산제2동': '2647066000', '연산제3동': '2647067000', '연산제4동': '2647068000', '연산제5동': '2647069000', '연산제6동': '2647070000', '연산제7동': '2647071000', '연산제8동': '2647072000', '연산제9동': '2647073000'}
-
-
-# code = AgePopulationAnalysis(hdong_dict=hdong_dict)
-#
-# print(code.get_population_data())
-api = Kosis("YWZhOWE3ZjgxYzY0YThkYWRmMDgyYzQzZDZjMjM2NTk=")
-item = api.get_data(
-    "통계표설명",
-    "분류항목",
-    orgId="537",
-    tblId="DT_53701_B001005",
-)
-print(item)
-df = api.get_data(
-    service_name="통계자료",  # 서비스명: '통계자료'로 수정
-    orgId="537",  # 기관 ID: '101'은 해당 통계를 제공하는 기관 ID
-    tblId="DT_53701_B001005",  # 통계표 ID: 통계표 ID는 실제 통계 표에 해당하는 고유 ID (예: 'DT_1B040B3')
-    objL1="I_9 I_11",  # 분류ID: 'A'는 행정구역별 통계 자료를 요청하는 항목 hdong_code
-    objL2="11101BSM2107051", # "ALL"
-    itmId="ALL",  # 분류값ID: 'T1'은 세대수와 관련된 항목
-    prdSe="Y",  # 수록주기: 'Y'는 연간 기준 데이터 요청
-    startPrdDe="2022",  # 시작 기간: '202211'은 2022년 11월
-    endPrdDe="2022",  # 종료 기간: 동일한 2022년 11월
-)
-print(df)
-
-#
-#
-# # 기본 URL
-# data = []  # 광역시명, 연령대, 수치값을 저장할 리스트
-# orgId = "101"  # 기관ID
-# tblId = "DT_1B040B3"  # 통계표ID
-# itmId = "T2"  # 총인구수 항목
-# prdSe = "Y"  # 수록주기
-# max_year = "2024"
-
 # api = Kosis("YWZhOWE3ZjgxYzY0YThkYWRmMDgyYzQzZDZjMjM2NTk=")
-# df = api.get_data(
-#     "KOSIS통합검색",
-#     searchNm="행정동별 세대수"
-# )
-# print(df.head(1))
 # item = api.get_data(
 #     "통계표설명",
 #     "분류항목",
-#     orgId=orgId,
-#     tblId=tblId,
+#     orgId="537",
+#     tblId="DT_53701_B001005",
 # )
 # print(item)
-#
-# # 여기 참고: https://github.com/WooilJeong/PublicDataReader/blob/main/assets/docs/kosis/Kosis.md
 # df = api.get_data(
 #     service_name="통계자료",  # 서비스명: '통계자료'로 수정
-#     orgId=orgId,  # 기관 ID: '101'은 해당 통계를 제공하는 기관 ID
-#     tblId=tblId,  # 통계표 ID: 통계표 ID는 실제 통계 표에 해당하는 고유 ID (예: 'DT_1B040B3')
-#     objL1="00",  # 분류ID: 'A'는 행정구역별 통계 자료를 요청하는 항목
+#     orgId="537",  # 기관 ID: '101'은 해당 통계를 제공하는 기관 ID
+#     tblId="DT_53701_B001005",  # 통계표 ID: 통계표 ID는 실제 통계 표에 해당하는 고유 ID (예: 'DT_1B040B3')
+#     objL1="I_9 I_11",  # 분류ID: 'A'는 행정구역별 통계 자료를 요청하는 항목 hdong_code
+#     objL2="11101BSM2107051", # "ALL"
 #     itmId="ALL",  # 분류값ID: 'T1'은 세대수와 관련된 항목
 #     prdSe="Y",  # 수록주기: 'Y'는 연간 기준 데이터 요청
-#     startPrdDe="2024",  # 시작 기간: '202211'은 2022년 11월
-#     endPrdDe="2024",  # 종료 기간: 동일한 2022년 11월
+#     startPrdDe="2022",  # 시작 기간: '202211'은 2022년 11월
+#     endPrdDe="2022",  # 종료 기간: 동일한 2022년 11월
 # )
 # print(df)
-
