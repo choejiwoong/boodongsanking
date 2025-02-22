@@ -272,7 +272,7 @@ def get_coordinates(place_name):
     headers = {"Authorization": f"KakaoAK {KAKAO_API_KEY}"}
     params = {"query": place_name}
 
-    response = requests.get(SEARCH_URL, headers=headers, params=params, timeout=10)
+    response = requests.get(SEARCH_URL, headers=headers, params=params, timeout=10, verify=False)
 
     if response.status_code == 200:
         data = response.json()
@@ -287,46 +287,46 @@ def get_coordinates(place_name):
         return None
 
 
-# 출발지와 도착지 입력
-origin_name = "부산 종합운동장역"
-destination_name = "서면역"
-
-# 좌표 검색
-origin_coords = get_coordinates(origin_name)
-destination_coords = get_coordinates(destination_name)
-
-if origin_coords and destination_coords:
-    # 길찾기 API 요청
-    headers = {"Authorization": f"KakaoAK {KAKAO_API_KEY}"}
-    params = {
-        "origin": f"{origin_coords[0]},{origin_coords[1]}",
-        "destination": f"{destination_coords[0]},{destination_coords[1]}",
-        "priority": "RECOMMEND",
-        "car_fuel": "GASOLINE",
-        "car_hipass": False,
-    }
-
-    response = requests.get(DIRECTIONS_URL, headers=headers, params=params, timeout=10)
-
-    if response.status_code == 200:
-        data = response.json()
-        if data['routes'][0]['result_code'] == 0:
-            distance = data['routes'][0]['summary']['distance']
-            duration = data['routes'][0]['summary']['duration']
-
-            hours = duration // 3600  # 시간
-            minutes = (duration % 3600) // 60  # 분
-            seconds = duration % 60  # 초
-
-            # 출력
-            print(f"출발지: {origin_name} ({origin_coords})")
-            print(f"도착지: {destination_name} ({destination_coords})")
-            print(f"경로 거리: {distance / 1000:.2f}km")
-            print(f"예상 소요 시간: {duration}초 ({hours}시간 {minutes}분 {seconds}초)")
-        else:
-            print("길찾기 API에서 결과를 찾을 수 없습니다.")
-    else:
-        print(f"길찾기 API 요청 실패: {response.status_code}")
+# # 출발지와 도착지 입력
+# origin_name = "부산 종합운동장역"
+# destination_name = "서면역"
+#
+# # 좌표 검색
+# origin_coords = get_coordinates(origin_name)
+# destination_coords = get_coordinates(destination_name)
+#
+# if origin_coords and destination_coords:
+#     # 길찾기 API 요청
+#     headers = {"Authorization": f"KakaoAK {KAKAO_API_KEY}"}
+#     params = {
+#         "origin": f"{origin_coords[0]},{origin_coords[1]}",
+#         "destination": f"{destination_coords[0]},{destination_coords[1]}",
+#         "priority": "RECOMMEND",
+#         "car_fuel": "GASOLINE",
+#         "car_hipass": False,
+#     }
+#
+#     response = requests.get(DIRECTIONS_URL, headers=headers, params=params, timeout=10, verify=False)
+#
+#     if response.status_code == 200:
+#         data = response.json()
+#         if data['routes'][0]['result_code'] == 0:
+#             distance = data['routes'][0]['summary']['distance']
+#             duration = data['routes'][0]['summary']['duration']
+#
+#             hours = duration // 3600  # 시간
+#             minutes = (duration % 3600) // 60  # 분
+#             seconds = duration % 60  # 초
+#
+#             # 출력
+#             print(f"출발지: {origin_name} ({origin_coords})")
+#             print(f"도착지: {destination_name} ({destination_coords})")
+#             print(f"경로 거리: {distance / 1000:.2f}km")
+#             print(f"예상 소요 시간: {duration}초 ({hours}시간 {minutes}분 {seconds}초)")
+#         else:
+#             print("길찾기 API에서 결과를 찾을 수 없습니다.")
+#     else:
+#         print(f"길찾기 API 요청 실패: {response.status_code}")
 
 
 

@@ -10,6 +10,7 @@ from bson import ObjectId
 from crawler_hakgun import *
 from crawler_hwangyeong import *
 from crawler_gyotong import *
+from crawler_jikjang import *
 
 # ==============================================================================
 # 페이지 기본 설정
@@ -37,7 +38,6 @@ if find_documents(collection_sigungu, query):
     # sigungu_dict session_state에 저장
     if 'sigungu_dict' not in st.session_state or st.session_state.sigungu_dict != sigungu_dict[0]:
         st.session_state.sigungu_dict = sigungu_dict[0]
-        # print(sigungu_dict[0])
 
     # 도시 선택 selectedbox
     selected_sido = st.selectbox('도시를 선택하세요.', list(sigungu_dict[0].keys()), index=1)
@@ -49,6 +49,7 @@ if find_documents(collection_sigungu, query):
     # 선택된 시군구 session_state에 저장
     if 'selected_sigungu' not in st.session_state or st.session_state.selected_sigungu != selected_sigungu:
         st.session_state.selected_sigungu = selected_sigungu
+    # print(st.session_state.sigungu_dict[selected_sido].keys())
 
 # ==============================================================================
 # 정보수집 버튼들
@@ -114,6 +115,7 @@ if st.button("😊 인구 데이터 수집", use_container_width=True):
             st.session_state.get_age_population_data_sigungu = get_age_population_data_sigungu
             # 세대수
             get_population_data_sigungu = code_sigungu.get_population_data()
+            st.session_state.get_population_data_sigungu = get_population_data_sigungu
 
             result_df = get_age_population_data_sigungu[['전체']].copy()  # '전체' 열만 가져오고 복사
             result_df = result_df.rename(columns={'전체': '총인구수'})  # '전체' 열을 '총인구수'로 변경
@@ -142,6 +144,37 @@ if st.button("😊 인구 데이터 수집", use_container_width=True):
             # st.session_state.pop_div_saedae_hdong = result_df
             # st.session_state.get_population_plotly_hdong = code_hdong.get_population_plotly(result_df)
             st.success('😊_1. 인구/행정동별 인구 데이터 불러오기 완료')
+
+
+            ############ test
+            # 직장 관련 인스턴스 생성
+            # 광역시
+            fetcher = KosisDataFetcher(gwangyeok_dict=gwangyeok_dict)
+            st.session_state.jikjang_gwangyeok_df = fetcher.fetch_and_process_data()
+            # 시군구
+            sigungu_dict = st.session_state.sigungu_dict[selected_sido]
+            sigungu_dict_filtered = {key: value['전체'] for key, value in sigungu_dict.items() if isinstance(value, dict)}
+            fetcher = KosisDataFetcher(sigungu_dict=sigungu_dict_filtered, selected_sido=st.session_state.selected_sido)
+            st.session_state.jikjang_sigungu_df = fetcher.fetch_and_process_data()
+            st.success('🏙_2. 직장 데이터 불러오기 완료')
+        else:
+            st.error('☢ 시군구명을 선택해주세요!')
+# ==============================================================================
+# 직장 데이터 수집 버튼
+# ==============================================================================
+if st.button("🏙 직장 데이터 수집", use_container_width=True):
+    with st.spinner('잠시만 기다려주세요. 데이터를 불러오는 중입니다...⏳'):
+        if selected_sigungu != '전체':
+            # 직장 관련 인스턴스 생성
+            # 광역시
+            fetcher = KosisDataFetcher(gwangyeok_dict=gwangyeok_dict)
+            st.session_state.jikjang_gwangyeok_df = fetcher.fetch_and_process_data()
+            # 시군구
+            sigungu_dict = st.session_state.sigungu_dict[selected_sido]
+            sigungu_dict_filtered = {key: value['전체'] for key, value in sigungu_dict.items() if isinstance(value, dict)}
+            fetcher = KosisDataFetcher(sigungu_dict=sigungu_dict_filtered, selected_sido=st.session_state.selected_sido)
+            st.session_state.jikjang_sigungu_df = fetcher.fetch_and_process_data()
+            st.success('🏙_2. 직장 데이터 불러오기 완료')
         else:
             st.error('☢ 시군구명을 선택해주세요!')
 # ==============================================================================
