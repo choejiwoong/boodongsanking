@@ -97,6 +97,7 @@ if st.button("😊 인구 데이터 수집", use_container_width=True):
             st.session_state.get_age_population_data_gwangyeok = get_age_population_data_gwangyeok
             # 세대수
             get_population_data_gwangyeok = code_gwangyeok.get_population_data()
+            st.session_state.get_population_data_gwangyeok = get_population_data_gwangyeok
             result_df = get_age_population_data_gwangyeok[['전체']].copy()  # '전체' 열만 가져오고 복사
             result_df = result_df.rename(columns={'전체': '총인구수'})  # '전체' 열을 '총인구수'로 변경
             result_df['세대수'] = get_population_data_gwangyeok['수치값']  # '세대수' 열 추가

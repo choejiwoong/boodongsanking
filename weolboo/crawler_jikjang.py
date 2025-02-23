@@ -2,6 +2,8 @@
 #### 아직 안 끝남....
 from PublicDataReader import Kosis
 import pandas as pd
+import streamlit as st
+import re
 # https://github.com/WooilJeong/PublicDataReader/blob/main/assets/docs/kosis/Kosis.md
 # 최대 출력할 행 수와 열 수 설정
 pd.set_option('display.max_rows', None)  # 모든 행 출력
@@ -76,12 +78,12 @@ class KosisDataFetcher:
                 startPrdDe=max_year,  # 시작년도
                 endPrdDe=max_year,  # 종료년도
             )
-            print(self.selected_sido)
+            # print(self.selected_sido)
             filtered_df = df[df['분류값명1'] == self.selected_sido]
 
             if not filtered_df.empty:
                 result[self.selected_sido] = filtered_df['분류값ID1'].iloc[0]
-                print(result[self.selected_sido])
+                # print(result[self.selected_sido])
             else:
                 result[self.selected_sido] = None
         return result
@@ -206,24 +208,77 @@ class KosisDataFetcher:
 
         new_df.set_index("구분", inplace=True)
 
+        if st.session_state.get_population_data_gwangyeok is not None:
+            print(st.session_state.get_population_data_gwangyeok)
+            new_df['총인구수'] = st.session_state.get_population_data_gwangyeok['수치값']
+            new_df['총인구수'] = pd.to_numeric(new_df['총인구수'], errors='coerce')
+            new_df['사업체수'] = pd.to_numeric(new_df['사업체수'], errors='coerce')
+            new_df['종사자수'] = pd.to_numeric(new_df['종사자수'], errors='coerce')
+            new_df['등급'] = new_df['종사자수'].apply(
+                lambda x: 'S' if x >= 300000 else ('A' if x >= 200000 else ('B' if x >= 100000 else 'C'))
+            )
+
+            new_df['총인구수 대비 종사자비율'] = new_df.apply(lambda row: round((row['종사자수'] / row['총인구수'] * 100), 1), axis=1)
+            new_df['사업체수'] = new_df['사업체수'].apply(lambda x: f'{x:,}' if isinstance(x, (int, float)) else x)
+            new_df['종사자수'] = new_df['종사자수'].apply(lambda x: f'{x:,}' if isinstance(x, (int, float)) else x)
+            new_df['500인 이상 사업체수'] = new_df['500인 이상 사업체수'].apply(lambda x: f'{x:,}' if isinstance(x, (int, float)) else x)
+
+        if st.session_state.get_population_data_sigungu is not None:
+            new_df['총인구수'] = st.session_state.get_population_data_sigungu['수치값']
+            new_df['총인구수'] = pd.to_numeric(new_df['총인구수'], errors='coerce')
+            new_df['사업체수'] = pd.to_numeric(new_df['사업체수'], errors='coerce')
+            new_df['종사자수'] = pd.to_numeric(new_df['종사자수'], errors='coerce')
+            new_df['등급'] = new_df['종사자수'].apply(
+                lambda x: 'S' if x >= 300000 else ('A' if x >= 200000 else ('B' if x >= 100000 else 'C'))
+            )
+
+            new_df['총인구수 대비 종사자비율'] = new_df.apply(lambda row: round((row['종사자수'] / row['총인구수'] * 100), 1), axis=1)
+            new_df['사업체수'] = new_df['사업체수'].apply(lambda x: f'{x:,}' if isinstance(x, (int, float)) else x)
+            new_df['종사자수'] = new_df['종사자수'].apply(lambda x: f'{x:,}' if isinstance(x, (int, float)) else x)
+            new_df['500인 이상 사업체수'] = new_df['500인 이상 사업체수'].apply(lambda x: f'{x:,}' if isinstance(x, (int, float)) else x)
+
         return new_df
 
+api = Kosis("YWZhOWE3ZjgxYzY0YThkYWRmMDgyYzQzZDZjMjM2NTk=")  # Kosis API 인스턴스 생성
+orgId = "118"
+tblId = "DT_118N_SAUPN75"
+data = []
+# 산업분류 코드 리스트 생성
+industry_codes = [f"190326INDUSTRY_10S{chr(i)}" for i in range(ord('A'), ord('S') + 1)]
+for index in range(15):
+    for industry_code in industry_codes:
 
-# # 새로운 DataFrame 출력
-# print(new_df)
-#
-# df = api.get_data(
-#     service_name="통계자료",  # 서비스명
-#     orgId=orgId,  # 기관 ID
-#     tblId=tblId,  # 통계표 ID
-#     objL1="ALL",  # 지역 코드
-#     objL2="190326INDUSTRY_10S0",  # 산업분류별 코드 ex) 전체: 190326INDUSTRY_10S0
-#     objL3="15118SIZES_0709",  # 규모별 코드 ex) 500인 이상
-#     itmId="16118ED_1",  # 사업체수 항목
-#     prdSe="Y",  # 수록주기
-#     startPrdDe="2022",  # 시작년도
-#     endPrdDe="2022",  # 종료년도
-# )
+        df = api.get_data(
+            service_name="통계자료",  # 서비스명
+            orgId=orgId,  # 기관 ID
+            tblId=tblId,  # 통계표 ID
+            objL1=f"15118ZONE2012_2121{str(index + 1).zfill(2)}",  # 지역 코드 15118ZONE2012_212113
+            objL2=industry_code,  # 산업분류별 코드 ex) 전체: 190326INDUSTRY_10S0
+            objL3="15118SIZES_0700",  # 규모별 코드 ex) 전체
+            itmId="16118ED_1",  # 사업체수 항목
+            prdSe="Y",  # 수록주기
+            startPrdDe="2022",  # 시작년도
+            endPrdDe="2022",  # 종료년도
+        )
+
+        # df가 None이거나 DataFrame이 아니거나 비어 있으면 break
+        if df is None or not isinstance(df, pd.DataFrame) or df.empty:
+            print(f"⚠️ objL2={industry_code}: 데이터 없음, 루프 종료")
+            break
+
+
+        data.append({
+            "구분": df['분류값명1'].iloc[0],
+            "산업명": df['분류값명2'].iloc[0],
+            "수치값": df['수치값'].sum(),
+        })
+new_df = pd.DataFrame(data)
+pivot_df = new_df.pivot(index="구분", columns="산업명", values="수치값")
+pivot_df['J.정보통신업(58~63)'] = pd.to_numeric(pivot_df['J.정보통신업(58~63)'], errors='coerce')
+pivot_df['K.금융 및 보험업(64~66)'] = pd.to_numeric(pivot_df['K.금융 및 보험업(64~66)'], errors='coerce')
+pivot_df['M.전문 과학 및 기술 서비스업(70~73)'] = pd.to_numeric(pivot_df['M.전문 과학 및 기술 서비스업(70~73)'], errors='coerce')
+pivot_df['고소득산업'] = pivot_df['J.정보통신업(58~63)'] + pivot_df['K.금융 및 보험업(64~66)'] + pivot_df['M.전문 과학 및 기술 서비스업(70~73)']
+print(pivot_df)
 
 # gwangyeok_dict = {'부산광역시': '260000', '대구광역시': '315555'}  # 예시 데이터
 # sigungu_dict = {'연제구': '260000000', '해운대구': '250000000', '해운대ㅇㅇㅇ구': '250000000', '해ㄴㄹㄴㅇㅁㄹ대구': '250000000', '해운대ㄹㅁㄴㄹ': '250000000', '해ㅇ': '250000000', 'ㅇㅇ': '250000000'}  # 예시 데이터
