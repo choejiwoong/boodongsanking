@@ -12,6 +12,8 @@ if 'jikjang_gwangyeok_df' not in st.session_state:
     st.session_state.jikjang_gwangyeok_df = None  # 초기값 설정 (None, 빈 문자열, 또는 적당한 값)
 if 'jikjang_sigungu_df' not in st.session_state:
     st.session_state.jikjang_sigungu_df = None  # 초기값 설정 (None, 빈 문자열, 또는 적당한 값)
+if 'get_population_data_gwangyeok' not in st.session_state:
+    st.session_state.get_population_data_gwangyeok = None  # 초기값 설정 (None, 빈 문자열, 또는 적당한 값)
 if 'get_population_data_sigungu' not in st.session_state:
     st.session_state.get_population_data_sigungu = None  # 초기값 설정 (None, 빈 문자열, 또는 적당한 값)
 

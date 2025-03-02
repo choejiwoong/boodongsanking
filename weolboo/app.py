@@ -148,16 +148,16 @@ if st.button("😊 인구 데이터 수집", use_container_width=True):
 
 
             ############ test
-            # 직장 관련 인스턴스 생성
-            # 광역시
-            fetcher = KosisDataFetcher(gwangyeok_dict=gwangyeok_dict)
-            st.session_state.jikjang_gwangyeok_df = fetcher.fetch_and_process_data()
-            # 시군구
-            sigungu_dict = st.session_state.sigungu_dict[selected_sido]
-            sigungu_dict_filtered = {key: value['전체'] for key, value in sigungu_dict.items() if isinstance(value, dict)}
-            fetcher = KosisDataFetcher(sigungu_dict=sigungu_dict_filtered, selected_sido=st.session_state.selected_sido)
-            st.session_state.jikjang_sigungu_df = fetcher.fetch_and_process_data()
-            st.success('🏙_2. 직장 데이터 불러오기 완료')
+            # # 직장 관련 인스턴스 생성
+            # # 광역시
+            # fetcher = KosisDataFetcher(gwangyeok_dict=gwangyeok_dict)
+            # st.session_state.jikjang_gwangyeok_df = fetcher.fetch_and_process_data()
+            # # 시군구
+            # sigungu_dict = st.session_state.sigungu_dict[selected_sido]
+            # sigungu_dict_filtered = {key: value['전체'] for key, value in sigungu_dict.items() if isinstance(value, dict)}
+            # fetcher = KosisDataFetcher(sigungu_dict=sigungu_dict_filtered, selected_sido=st.session_state.selected_sido)
+            # st.session_state.jikjang_sigungu_df = fetcher.fetch_and_process_data()
+            # st.success('🏙_2. 직장 데이터 불러오기 완료')
         else:
             st.error('☢ 시군구명을 선택해주세요!')
 # ==============================================================================
