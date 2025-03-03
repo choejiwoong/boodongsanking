@@ -3,6 +3,8 @@
 from PublicDataReader import Kosis
 import pandas as pd
 import streamlit as st
+import plotly.express as px
+import plotly.graph_objects as go
 import re
 # https://github.com/WooilJeong/PublicDataReader/blob/main/assets/docs/kosis/Kosis.md
 # 최대 출력할 행 수와 열 수 설정
@@ -168,6 +170,85 @@ class KosisDataFetcher:
         result_df = self.process_data(data)
         return result_df
 
+    def fetch_and_process_industry_data(self):
+        """
+        각 시군구 및 objL3별 데이터 가져오기
+        """
+        max_year = self.get_latest_year()
+
+        orgId = "118"
+        tblId = "DT_118N_SAUPN75"
+        data = []
+        # 산업분류 코드 리스트 생성
+        industry_codes = [f"190326INDUSTRY_10S{chr(i)}" for i in range(ord('A'), ord('S') + 1)]
+        # 🔹 광역시 데이터 처리
+        if self.gwangyeok_dict is not None:
+            gwangyeok_list = [gwangyeok for gwangyeok in self.gwangyeok_dict.keys() if gwangyeok != '전체']
+            classification_id = self.get_classification_id_by_city()
+            for gwangyeok in gwangyeok_list:
+                for industry_code in industry_codes:
+                    df = self.api.get_data(
+                        service_name="통계자료",  # 서비스명
+                        orgId=orgId,  # 기관 ID
+                        tblId=tblId,  # 통계표 ID
+                        objL1=classification_id[gwangyeok],  # 지역 코드
+                        objL2=industry_code,  # 산업분류별 코드 ex) 전체: 190326INDUSTRY_10S0
+                        objL3="15118SIZES_0700",  # 규모별 코드 ex) 전체
+                        itmId="16118ED_1",  # 사업체수 항목
+                        prdSe="Y",  # 수록주기
+                        startPrdDe=max_year,  # 시작년도
+                        endPrdDe=max_year,  # 종료년도
+                    )
+
+                    # df가 None이거나 DataFrame이 아니거나 비어 있으면 break
+                    if df is None or not isinstance(df, pd.DataFrame) or df.empty:
+                        print(f"⚠️ objL2={industry_code}: 데이터 없음, 루프 종료")
+                        break
+
+                    data.append({
+                        "구분": df['분류값명1'].iloc[0],
+                        "산업명": df['분류값명2'].iloc[0],
+                        "수치값": df['수치값'].sum(),
+                    })
+        else:
+            # 🔹 시군구 데이터 처리
+            sigungu_list = [sigungu for sigungu in self.sigungu_dict.keys() if sigungu != '전체']
+            classification_id = self.get_classification_id_by_city()
+            modified_dict = self.generate_modified_dict(classification_id)
+            for i, sigungu in enumerate(sigungu_list):
+                for industry_code in industry_codes:
+                    df = self.api.get_data(
+                        service_name="통계자료",  # 서비스명
+                        orgId=orgId,  # 기관 ID
+                        tblId=tblId,  # 통계표 ID
+                        objL1=f"{modified_dict[self.selected_sido]}{str(i + 1).zfill(2)}",  # 지역 코드 15118ZONE2012_212113
+                        objL2=industry_code,  # 산업분류별 코드 ex) 전체: 190326INDUSTRY_10S0
+                        objL3="15118SIZES_0700",  # 규모별 코드 ex) 전체
+                        itmId="16118ED_1",  # 사업체수 항목
+                        prdSe="Y",  # 수록주기
+                        startPrdDe=max_year,  # 시작년도
+                        endPrdDe=max_year,  # 종료년도
+                    )
+
+                    # df가 None이거나 DataFrame이 아니거나 비어 있으면 break
+                    if df is None or not isinstance(df, pd.DataFrame) or df.empty:
+                        print(f"⚠️ objL2={industry_code}: 데이터 없음, 루프 종료")
+                        break
+
+                    data.append({
+                        "구분": df['분류값명1'].iloc[0],
+                        "산업명": df['분류값명2'].iloc[0],
+                        "수치값": df['수치값'].sum(),
+                    })
+        new_df = pd.DataFrame(data)
+        pivot_df = new_df.pivot(index="구분", columns="산업명", values="수치값")
+        pivot_df['J.정보통신업(58~63)'] = pd.to_numeric(pivot_df['J.정보통신업(58~63)'], errors='coerce')
+        pivot_df['K.금융 및 보험업(64~66)'] = pd.to_numeric(pivot_df['K.금융 및 보험업(64~66)'], errors='coerce')
+        pivot_df['M.전문 과학 및 기술 서비스업(70~73)'] = pd.to_numeric(pivot_df['M.전문 과학 및 기술 서비스업(70~73)'], errors='coerce')
+        pivot_df['고소득산업'] = pivot_df['J.정보통신업(58~63)'] + pivot_df['K.금융 및 보험업(64~66)'] + pivot_df['M.전문 과학 및 기술 서비스업(70~73)']
+        pivot_df = pivot_df.apply(pd.to_numeric, errors='coerce')
+        return pivot_df
+
     def generate_modified_dict(self, classification_id):
         """
         시군구 코드 끝 두 자리를 추가하는 함수
@@ -244,46 +325,53 @@ class KosisDataFetcher:
 
         return copy_df
 
-# api = Kosis("YWZhOWE3ZjgxYzY0YThkYWRmMDgyYzQzZDZjMjM2NTk=")  # Kosis API 인스턴스 생성
-# orgId = "118"
-# tblId = "DT_118N_SAUPN75"
-# data = []
-# # 산업분류 코드 리스트 생성
-# industry_codes = [f"190326INDUSTRY_10S{chr(i)}" for i in range(ord('A'), ord('S') + 1)]
-# for index in range(15):
-#     for industry_code in industry_codes:
+    # ==============================================================================
+    # 산업별 비중 그래프 그리기
+    # ==============================================================================
+    def get_plotly(self, df):
+        # print(df.dtypes)
+        # print(df.columns)  # 컬럼명 확인
+        # print(df.index)
+
+        # 연령대별 색상 매핑
+        color_map = px.colors.qualitative.Pastel1  # 또는 Pastel2
+        # Streamlit에서 DataFrame 출력
+        if not df.empty:
+
+            # 색상 맵 정의
+            color_map = px.colors.qualitative.Pastel1
+
+            # bar 그래프 생성
+            fig = px.bar(df,
+                         x=df.index,  # 지역명
+                         y=df.columns,  # 산업별 수치
+                         color_discrete_map=color_map,  # 색상 맵 적용
+                        barmode = 'stack'
+                         )
+
+            # # 고소득사업 값을 Scatter로 추가
+            # scatter_trace = go.Scatter(
+            #     x=df.index,
+            #     y=df_active,  # 경제활동인구 값
+            #     mode='lines+markers',
+            #     name='경제활동인구',
+            #     line=dict(color='black', dash='dot'),
+            #     text=df_active.round(1),
+            #     textposition='top center'
+            # )
+            # # 그래프에 Scatter trace 추가
+            # fig.add_trace(scatter_trace)
+            # 그래프 표시
+            fig.show()
+            return fig
+        else:
+            return None
+
+# gwangyeok_dict = {'부산광역시': '260000', '대구광역시': '315555'}
+# # sigungu_dict = {'연제구': '260000000', '해운대구': '250000000', '해운대ㅇㅇㅇ구': '250000000', '해ㄴㄹㄴㅇㅁㄹ대구': '250000000', '해운대ㄹㅁㄴㄹ': '250000000', '해ㅇ': '250000000', 'ㅇㅇ': '250000000'}  # 예시 데이터
 #
-#         df = api.get_data(
-#             service_name="통계자료",  # 서비스명
-#             orgId=orgId,  # 기관 ID
-#             tblId=tblId,  # 통계표 ID
-#             objL1=f"15118ZONE2012_2121{str(index + 1).zfill(2)}",  # 지역 코드 15118ZONE2012_212113
-#             objL2=industry_code,  # 산업분류별 코드 ex) 전체: 190326INDUSTRY_10S0
-#             objL3="15118SIZES_0700",  # 규모별 코드 ex) 전체
-#             itmId="16118ED_1",  # 사업체수 항목
-#             prdSe="Y",  # 수록주기
-#             startPrdDe="2022",  # 시작년도
-#             endPrdDe="2022",  # 종료년도
-#         )
-#
-#         # df가 None이거나 DataFrame이 아니거나 비어 있으면 break
-#         if df is None or not isinstance(df, pd.DataFrame) or df.empty:
-#             print(f"⚠️ objL2={industry_code}: 데이터 없음, 루프 종료")
-#             break
-#
-#
-#         data.append({
-#             "구분": df['분류값명1'].iloc[0],
-#             "산업명": df['분류값명2'].iloc[0],
-#             "수치값": df['수치값'].sum(),
-#         })
-# new_df = pd.DataFrame(data)
-# pivot_df = new_df.pivot(index="구분", columns="산업명", values="수치값")
-# pivot_df['J.정보통신업(58~63)'] = pd.to_numeric(pivot_df['J.정보통신업(58~63)'], errors='coerce')
-# pivot_df['K.금융 및 보험업(64~66)'] = pd.to_numeric(pivot_df['K.금융 및 보험업(64~66)'], errors='coerce')
-# pivot_df['M.전문 과학 및 기술 서비스업(70~73)'] = pd.to_numeric(pivot_df['M.전문 과학 및 기술 서비스업(70~73)'], errors='coerce')
-# pivot_df['고소득산업'] = pivot_df['J.정보통신업(58~63)'] + pivot_df['K.금융 및 보험업(64~66)'] + pivot_df['M.전문 과학 및 기술 서비스업(70~73)']
-# print(pivot_df)
+# fetcher = KosisDataFetcher(gwangyeok_dict=gwangyeok_dict)
+# print(fetcher.fetch_and_process_industry_data())
 
 # gwangyeok_dict = {'부산광역시': '260000', '대구광역시': '315555'}  # 예시 데이터
 # sigungu_dict = {'연제구': '260000000', '해운대구': '250000000', '해운대ㅇㅇㅇ구': '250000000', '해ㄴㄹㄴㅇㅁㄹ대구': '250000000', '해운대ㄹㅁㄴㄹ': '250000000', '해ㅇ': '250000000', 'ㅇㅇ': '250000000'}  # 예시 데이터
@@ -292,3 +380,112 @@ class KosisDataFetcher:
 # # fetcher = KosisDataFetcher(sigungu_dict=sigungu_dict, selected_sido="부산광역시")
 # result_df = fetcher.fetch_and_process_data()
 # print(result_df)
+
+# # ==============================================================================
+# # 광역시 소득비중
+# # ==============================================================================
+# api = Kosis("YWZhOWE3ZjgxYzY0YThkYWRmMDgyYzQzZDZjMjM2NTk=")
+# item = api.get_data(
+#     "통계자료",
+#     orgId = "322",
+#     tblId = "DT_32202_B018_1",
+#     itmId = "ALL",
+#     objL1 = "ALL",
+#     objL2 = "ALL",
+#     prdSe = "Y",
+#     startPrdDe="2021",
+#     endPrdDe="2021",
+# )
+# print(item)
+
+# ==============================================================================
+# # 주소지 소득
+# # ==============================================================================
+api = Kosis("YWZhOWE3ZjgxYzY0YThkYWRmMDgyYzQzZDZjMjM2NTk=")
+df = pd.DataFrame()
+
+# 첫 번째 데이터 (인원) 처리
+item1 = api.get_data(
+    "통계자료",
+    orgId="133",
+    tblId="DT_133001N_4215",
+    itmId="T001",  # 인원
+    objL1="ALL",  # 시군구 ex) 남구: "A1404"
+    objL2="B01",  # 급여총계
+    prdSe="Y",
+    startPrdDe="2021",
+    endPrdDe="2021",
+)
+
+# 두 번째 데이터 (금액) 처리
+item2 = api.get_data(
+    "통계자료",
+    orgId="133",
+    tblId="DT_133001N_4215",
+    itmId="T002",  # 금액
+    objL1="ALL",  # 시군구
+    objL2="B01",  # 급여총계
+    prdSe="Y",
+    startPrdDe="2021",
+    endPrdDe="2021",
+)
+
+item1.loc[:, '수치값'] = pd.to_numeric(item1['수치값'], errors='coerce')  # errors='coerce'는 변환할 수 없는 값을 NaN으로 처리
+item2.loc[:, '수치값'] = pd.to_numeric(item2['수치값'], errors='coerce')  # errors='coerce'는 변환할 수 없는 값을 NaN으로 처리
+
+df['구분'] = item1['분류값명1']
+df['구분ID'] = item1['분류값ID1']
+df['주소지 소득'] = (item2['수치값'] * 100) / item1['수치값']
+# print(df)
+
+
+# ==============================================================================
+# # 원천징수지 소득
+# # ==============================================================================
+api = Kosis("YWZhOWE3ZjgxYzY0YThkYWRmMDgyYzQzZDZjMjM2NTk=")
+
+# 첫 번째 데이터 (인원) 처리
+item1 = api.get_data(
+    "통계자료",
+    orgId="133",
+    tblId="DT_133001N_4214",
+    itmId="T001",  # 인원
+    objL1="ALL",  # 시군구 ex) 남구: "A1404"
+    objL2="B01",  # 급여총계
+    prdSe="Y",
+    startPrdDe="2021",
+    endPrdDe="2021",
+)
+
+# 두 번째 데이터 (금액) 처리
+item2 = api.get_data(
+    "통계자료",
+    orgId="133",
+    tblId="DT_133001N_4214",
+    itmId="T002",  # 금액
+    objL1="ALL",  # 시군구
+    objL2="B01",  # 급여총계
+    prdSe="Y",
+    startPrdDe="2021",
+    endPrdDe="2021",
+)
+
+item1.loc[:, '수치값'] = pd.to_numeric(item1['수치값'], errors='coerce')  # errors='coerce'는 변환할 수 없는 값을 NaN으로 처리
+item2.loc[:, '수치값'] = pd.to_numeric(item2['수치값'], errors='coerce')  # errors='coerce'는 변환할 수 없는 값을 NaN으로 처리
+
+df['구분'] = item1['분류값명1']
+df['구분ID'] = item1['분류값ID1']
+df['원천징수지 소득'] = (item2['수치값'] * 100) / item1['수치값']
+# print(df)
+
+df1 = api.get_data(
+    "KOSIS통합검색",
+    searchNm="기업별 국민연금 납부금액",
+    )
+
+print(df1)
+
+# ==============================================================================
+# # 시군구내 최고연봉 기업
+# # ==============================================================================
+# 국민연금 사업자 가입현황: https://www.data.go.kr/data/15083277/fileData.do#/API%20%EB%AA%A9%EB%A1%9D/getuddi%3A45ba8ffb-ab8c-44da-abd6-b10ec30821cd
