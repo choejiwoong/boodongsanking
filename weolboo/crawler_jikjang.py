@@ -6,6 +6,8 @@ import streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go
 import re
+
+
 # https://github.com/WooilJeong/PublicDataReader/blob/main/assets/docs/kosis/Kosis.md
 # 최대 출력할 행 수와 열 수 설정
 pd.set_option('display.max_rows', None)  # 모든 행 출력
@@ -21,12 +23,10 @@ class KosisDataFetcher:
         self.selected_sido = selected_sido
         self.api = Kosis(service_key)  # Kosis API 인스턴스 생성
 
-    def get_latest_year(self):
+    def get_latest_year(self, orgId, tblId):
         """
         최신 년도 정보를 반환하는 함수
         """
-        orgId = "118"
-        tblId = "DT_118N_SAUPN75"
         df_update = self.api.get_data(
             "통계표설명",
             "자료갱신일",
@@ -41,9 +41,9 @@ class KosisDataFetcher:
         """
         각 도시 이름에 해당하는 '분류값ID1' 값을 반환하는 함수
         """
-        max_year = self.get_latest_year()
         orgId = "118"
         tblId = "DT_118N_SAUPN75"
+        max_year = self.get_latest_year(orgId, tblId)
         result = {}
         if self.gwangyeok_dict:
             for gwangyeok_name in self.gwangyeok_dict.keys():
@@ -94,9 +94,9 @@ class KosisDataFetcher:
         """
         각 시군구 및 objL3별 데이터 가져오기
         """
-        max_year = self.get_latest_year()
         orgId = "118"
         tblId = "DT_118N_SAUPN75"
+        max_year = self.get_latest_year(orgId, tblId)
         objL3_list = ["15118SIZES_0709", "15118SIZES_0710", "15118SIZES_0700"]  # 500~999인, 1000인 이상 항목, 전규모
         itmId_list = ["16118ED_1", '16118ED_9A'] # 사업체수, 종사자수
         data = []
@@ -174,10 +174,9 @@ class KosisDataFetcher:
         """
         각 시군구 및 objL3별 데이터 가져오기
         """
-        max_year = self.get_latest_year()
-
         orgId = "118"
         tblId = "DT_118N_SAUPN75"
+        max_year = self.get_latest_year(orgId, tblId)
         data = []
         # 산업분류 코드 리스트 생성
         industry_codes = [f"190326INDUSTRY_10S{chr(i)}" for i in range(ord('A'), ord('S') + 1)]
@@ -367,6 +366,97 @@ class KosisDataFetcher:
         else:
             return None
 
+    def get_income(self):
+        # ==============================================================================
+        # # 주소지 소득
+        # # ==============================================================================
+        df = pd.DataFrame()
+        orgId = "133"
+        tblId = "DT_133001N_4215"
+        max_year = self.get_latest_year(orgId, tblId)
+
+        # 첫 번째 데이터 (인원) 처리
+        item1 = self.api.get_data(
+            "통계자료",
+            orgId=orgId,
+            tblId=tblId,
+            itmId="T001",  # 인원
+            objL1="ALL",  # 시군구
+            objL2="B01",  # 급여총계
+            prdSe="Y",
+            startPrdDe=max_year,
+            endPrdDe=max_year,
+        )
+
+        # 두 번째 데이터 (금액) 처리
+        item2 = self.api.get_data(
+            "통계자료",
+            orgId=orgId,
+            tblId=tblId,
+            itmId="T002",  # 금액
+            objL1="ALL",  # 시군구
+            objL2="B01",  # 급여총계
+            prdSe="Y",
+            startPrdDe=max_year,
+            endPrdDe=max_year,
+        )
+
+        item1.loc[:, '수치값'] = pd.to_numeric(item1['수치값'], errors='coerce')  # errors='coerce'는 변환할 수 없는 값을 NaN으로 처리
+        item2.loc[:, '수치값'] = pd.to_numeric(item2['수치값'], errors='coerce')  # errors='coerce'는 변환할 수 없는 값을 NaN으로 처리
+
+        df['구분'] = item1['분류값명1']
+        df['구분ID'] = item1['분류값ID1']
+        df['주소지 소득'] = (item2['수치값'] * 100) / item1['수치값']
+
+        # ==============================================================================
+        # # 원천징수지 소득
+        # # ==============================================================================
+        orgId = "133"
+        tblId = "DT_133001N_4214"
+        max_year = self.get_latest_year(orgId, tblId)
+        # 첫 번째 데이터 (인원) 처리
+        item1 = self.api.get_data(
+            "통계자료",
+            orgId=orgId,
+            tblId=tblId,
+            itmId="T001",  # 인원
+            objL1="ALL",  # 시군구 ex) 남구: "A1404"
+            objL2="B01",  # 급여총계
+            prdSe="Y",
+            startPrdDe=max_year,
+            endPrdDe=max_year,
+        )
+
+        # 두 번째 데이터 (금액) 처리
+        item2 = self.api.get_data(
+            "통계자료",
+            orgId=orgId,
+            tblId=tblId,
+            itmId="T002",  # 금액
+            objL1="ALL",  # 시군구
+            objL2="B01",  # 급여총계
+            prdSe="Y",
+            startPrdDe=max_year,
+            endPrdDe=max_year,
+        )
+
+        item1.loc[:, '수치값'] = pd.to_numeric(item1['수치값'], errors='coerce')  # errors='coerce'는 변환할 수 없는 값을 NaN으로 처리
+        item2.loc[:, '수치값'] = pd.to_numeric(item2['수치값'], errors='coerce')  # errors='coerce'는 변환할 수 없는 값을 NaN으로 처리
+
+        df['구분'] = item1['분류값명1']
+        df['구분ID'] = item1['분류값ID1']
+        df['원천징수지 소득'] = (item2['수치값'] * 100) / item1['수치값']
+
+        if self.gwangyeok_dict is not None:
+            stripped_keys = [key.strip("광역시") for key in self.gwangyeok_dict.keys()]
+            df_set_gwangyeok = df.loc[df['구분'].isin(stripped_keys), '구분ID']
+            df_filtered_gwangyeok = df[df['구분ID'].isin(df_set_gwangyeok)]  # 광역시 코드
+            return df_filtered_gwangyeok
+        elif self.sigungu_dict is not None:
+            df_set_sigungu = df.loc[df['구분'] == st.session_state.selected_sido.strip("광역시"), '구분ID']
+            df_filtered_sigungu = df[df['구분ID'].str.contains(df_set_sigungu.values[0], na=False)]  # 시군구 코드
+            return df_filtered_sigungu
+
 # gwangyeok_dict = {'부산광역시': '260000', '대구광역시': '315555'}
 # # sigungu_dict = {'연제구': '260000000', '해운대구': '250000000', '해운대ㅇㅇㅇ구': '250000000', '해ㄴㄹㄴㅇㅁㄹ대구': '250000000', '해운대ㄹㅁㄴㄹ': '250000000', '해ㅇ': '250000000', 'ㅇㅇ': '250000000'}  # 예시 데이터
 #
@@ -384,108 +474,157 @@ class KosisDataFetcher:
 # # ==============================================================================
 # # 광역시 소득비중
 # # ==============================================================================
-# api = Kosis("YWZhOWE3ZjgxYzY0YThkYWRmMDgyYzQzZDZjMjM2NTk=")
+api = Kosis("YWZhOWE3ZjgxYzY0YThkYWRmMDgyYzQzZDZjMjM2NTk=")
+
+df = pd.DataFrame()
+# item = api.get_data(
+#     "KOSIS통합검색",
+#     searchNm="월평균 가구소득",
+# )
+
 # item = api.get_data(
 #     "통계자료",
-#     orgId = "322",
-#     tblId = "DT_32202_B018_1",
-#     itmId = "ALL",
-#     objL1 = "ALL",
-#     objL2 = "ALL",
-#     prdSe = "Y",
+#     orgId="322",
+#     tblId="DT_32202_B018_1",
+#     itmId="ALL",
+#     objL1="A003",  # 부산
+#     objL2="ALL",
+#     prdSe="Y",
 #     startPrdDe="2021",
 #     endPrdDe="2021",
 # )
-# print(item)
 
-# ==============================================================================
-# # 주소지 소득
+item = api.get_data(
+    "통계자료",
+    orgId="202",
+    tblId="DT_202005Y2024N063", # DT_202005Y2023N038
+    itmId="ALL",
+    objL1="ALL",  # 부산
+    objL2="ALL",
+    prdSe="Y",
+    startPrdDe="2024",
+    endPrdDe="2024",
+)
+
+
+print(item)
+
+# for i in range(10):
+#     item = api.get_data(
+#         "통계자료",
+#         orgId = "322",
+#         tblId = "DT_32202_B018_1",
+#         itmId = "ALL",
+#         objL1 = "A003", # 부산
+#         objL2 = f"B0{str(i).zfill(2)}",
+#         prdSe = "Y",
+#         startPrdDe="2021",
+#         endPrdDe="2021",
+#     )
+#
+#     print(item)
+
+
 # # ==============================================================================
-api = Kosis("YWZhOWE3ZjgxYzY0YThkYWRmMDgyYzQzZDZjMjM2NTk=")
-df = pd.DataFrame()
+# # # 시군구내 최고연봉 기업
+# # # ==============================================================================
+# # 국민연금 사업자 가입현황: https://www.data.go.kr/data/15083277/fileData.do#/API%20%EB%AA%A9%EB%A1%9D/getuddi%3A45ba8ffb-ab8c-44da-abd6-b10ec30821cd
+# import requests
+# import json
+#
+# # 올바른 API URL을 확인하세요.
+# base_url = "https://api.odcloud.kr/api"
+# end_point = "/15083277/v1/uddi:c6bf89c2-8c0b-4c8e-8698-b2cd9dc31d1f_201908061635"
+#
+# # API 인증 키
+# api_key = "9bg1tTFeumrhYeac4TTMmKVoiH5BV2qRxRlwEm/gFZB2vrjW+PpwQgFI0s7p5w9ipE7/qtijjWOmrxwEODkyMA=="
+#
+# # 요청 URL 생성
+# url = f"{base_url}{end_point}"
+#
+# # 한 번에 가져올 데이터 수 (최대값으로 설정)
+# per_page = 1000
+# page = 1  # 시작 페이지
+# all_data = []  # 필요한 데이터만 저장할 리스트
+#
+# # 필터링 기준
+# target_code = "26260" # 연제구: 26470, 부산진구: 26230, 동래구: 26260
+#
+# while True:
+#     # API 요청 파라미터 설정
+#     params = {
+#         "serviceKey": api_key,
+#         "page": page,
+#         "perPage": per_page,
+#     }
+#
+#     # API 요청
+#     res = requests.get(url, params=params, verify=False)
+#
+#     # 응답 상태 코드 확인
+#     if res.status_code != 200:
+#         print(f"오류 발생: {res.status_code}, 응답 내용: {res.text}")
+#         break
+#
+#     # JSON 데이터 변환
+#     try:
+#         response_data = res.json()
+#     except json.JSONDecodeError:
+#         print("JSON 변환 실패:", res.text)
+#         break
+#
+#     # 현재 페이지 데이터 필터링
+#     data_list = response_data.get("data", [])
+#     filtered_data = [
+#         data for data in data_list
+#         if target_code in str(data.get("고객법정동주소코드 CUST_LDONG_ADDR_CD\tVARCHAR(10)", ""))
+#     ]
+#
+#     # 필터링된 데이터만 저장
+#     all_data.extend(filtered_data)
+#
+#     # 현재 가져온 개수와 전체 개수를 확인
+#     current_count = len(data_list)  # 가져온 원본 데이터 개수
+#     filtered_count = len(filtered_data)  # 필터링된 데이터 개수
+#     total_count = response_data.get("totalCount", 0)
+#
+#     print(f"페이지 {page}의 데이터 {current_count}개 중 {filtered_count}개 필터링됨 (누적 {len(all_data)}개)")
+#
+#     # 더 이상 데이터가 없으면 중단
+#     if not data_list:
+#         print("모든 데이터를 불러왔습니다.")
+#         break
+#
+#     # 다음 페이지로 이동
+#     page += 1
+#
+#     # 전체 개수를 다 가져왔으면 중단
+#     if total_count and len(all_data) >= total_count:
+#         break
+#
+# # 최종 필터링된 데이터 출력
+# print(f"\n'고객법정동주소코드'가 {target_code}인 데이터 {len(all_data)}개 발견!")
+#
+# df = pd.DataFrame(data=all_data)
+# # 필요한 컬럼 이름 (실제 컬럼명을 확인하고 수정 필요)
+# subscriber_col = "가입자수 JNNGP_CNT INTEGER"
+# bill_col = "당월고지금액 CRRMM_NTC_AMT\tINTEGER"
+#
+# # 가입자수가 500명 이상인 데이터 필터링
+# filtered_df = df[df[subscriber_col] >= 500].copy()
+#
+# # 근로자 평균 월급 계산
+# filtered_df["총 월급"] = filtered_df[bill_col] / 0.09
+# filtered_df["평균 월급"] = filtered_df["총 월급"] / filtered_df[subscriber_col]
+#
+# # 평균 월급이 가장 큰 사업장 찾기
+# if not filtered_df.empty:
+#     top_business = filtered_df.loc[filtered_df["평균 월급"].idxmax()]
+#     print("가입자수 500명 이상 중 근로자 평균 월급이 가장 큰 사업장:")
+#     print(top_business)
+#     print(f"\n해당 사업장의 근로자 평균 월급: {top_business['평균 월급']:.2f} 원")
+# else:
+#     print("가입자수 500명 이상인 사업장이 없습니다.")
 
-# 첫 번째 데이터 (인원) 처리
-item1 = api.get_data(
-    "통계자료",
-    orgId="133",
-    tblId="DT_133001N_4215",
-    itmId="T001",  # 인원
-    objL1="ALL",  # 시군구 ex) 남구: "A1404"
-    objL2="B01",  # 급여총계
-    prdSe="Y",
-    startPrdDe="2021",
-    endPrdDe="2021",
-)
-
-# 두 번째 데이터 (금액) 처리
-item2 = api.get_data(
-    "통계자료",
-    orgId="133",
-    tblId="DT_133001N_4215",
-    itmId="T002",  # 금액
-    objL1="ALL",  # 시군구
-    objL2="B01",  # 급여총계
-    prdSe="Y",
-    startPrdDe="2021",
-    endPrdDe="2021",
-)
-
-item1.loc[:, '수치값'] = pd.to_numeric(item1['수치값'], errors='coerce')  # errors='coerce'는 변환할 수 없는 값을 NaN으로 처리
-item2.loc[:, '수치값'] = pd.to_numeric(item2['수치값'], errors='coerce')  # errors='coerce'는 변환할 수 없는 값을 NaN으로 처리
-
-df['구분'] = item1['분류값명1']
-df['구분ID'] = item1['분류값ID1']
-df['주소지 소득'] = (item2['수치값'] * 100) / item1['수치값']
-# print(df)
 
 
-# ==============================================================================
-# # 원천징수지 소득
-# # ==============================================================================
-api = Kosis("YWZhOWE3ZjgxYzY0YThkYWRmMDgyYzQzZDZjMjM2NTk=")
-
-# 첫 번째 데이터 (인원) 처리
-item1 = api.get_data(
-    "통계자료",
-    orgId="133",
-    tblId="DT_133001N_4214",
-    itmId="T001",  # 인원
-    objL1="ALL",  # 시군구 ex) 남구: "A1404"
-    objL2="B01",  # 급여총계
-    prdSe="Y",
-    startPrdDe="2021",
-    endPrdDe="2021",
-)
-
-# 두 번째 데이터 (금액) 처리
-item2 = api.get_data(
-    "통계자료",
-    orgId="133",
-    tblId="DT_133001N_4214",
-    itmId="T002",  # 금액
-    objL1="ALL",  # 시군구
-    objL2="B01",  # 급여총계
-    prdSe="Y",
-    startPrdDe="2021",
-    endPrdDe="2021",
-)
-
-item1.loc[:, '수치값'] = pd.to_numeric(item1['수치값'], errors='coerce')  # errors='coerce'는 변환할 수 없는 값을 NaN으로 처리
-item2.loc[:, '수치값'] = pd.to_numeric(item2['수치값'], errors='coerce')  # errors='coerce'는 변환할 수 없는 값을 NaN으로 처리
-
-df['구분'] = item1['분류값명1']
-df['구분ID'] = item1['분류값ID1']
-df['원천징수지 소득'] = (item2['수치값'] * 100) / item1['수치값']
-# print(df)
-
-df1 = api.get_data(
-    "KOSIS통합검색",
-    searchNm="기업별 국민연금 납부금액",
-    )
-
-print(df1)
-
-# ==============================================================================
-# # 시군구내 최고연봉 기업
-# # ==============================================================================
-# 국민연금 사업자 가입현황: https://www.data.go.kr/data/15083277/fileData.do#/API%20%EB%AA%A9%EB%A1%9D/getuddi%3A45ba8ffb-ab8c-44da-abd6-b10ec30821cd

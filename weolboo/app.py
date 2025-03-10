@@ -160,7 +160,7 @@ if st.button("🏙 직장 데이터 수집", use_container_width=True):
             st.session_state.jikjang_gwangyeok_industry_df = fetcher.fetch_and_process_industry_data()
             # print(st.session_state.jikjang_gwangyeok_industry_df)
             # st.session_state.jikjang_gwangyeok_industry_plotly = fetcher.get_plotly(st.session_state.jikjang_gwangyeok_industry_df)
-
+            st.session_state.jikjang_income_gwangyeok = fetcher.get_income()
             # 시군구
             sigungu_dict = st.session_state.sigungu_dict[selected_sido]
             sigungu_dict_filtered = {key: value['전체'] for key, value in sigungu_dict.items() if isinstance(value, dict)}
@@ -168,6 +168,7 @@ if st.button("🏙 직장 데이터 수집", use_container_width=True):
             st.session_state.jikjang_sigungu_df = fetcher.fetch_and_process_data()
             st.session_state.jikjang_sigungu_industry_df = fetcher.fetch_and_process_industry_data()
             # st.session_state.jikjang_sigungu_industry_plotly = fetcher.get_plotly(st.session_state.jikjang_sigungu_industry_df)
+            st.session_state.jikjang_income_sigungu = fetcher.get_income()
 
             st.success('🏙_2. 직장 데이터 불러오기 완료')
         else:
