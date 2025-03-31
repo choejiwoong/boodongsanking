@@ -1,21 +1,16 @@
-import PublicDataReader as pdr
-import streamlit
 from PublicDataReader import Kosis
 import pandas as pd
-from crawler_sigungu import *
-from datetime import datetime
 import streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go
-import requests
 from plotly.subplots import make_subplots
+from streamlit_db import *
 
 
 
-class AgePopulationAnalysis:
+class Ingoo:
     def __init__(self, service_key: str = "YWZhOWE3ZjgxYzY0YThkYWRmMDgyYzQzZDZjMjM2NTk=", gwangyeok_dict: dict = None, sigungu_dict: dict = None, hdong_dict: dict = None):
         # 시군구 이름과 KOSIS 서비스 키를 받아서 초기화
-        self.service_key = service_key
         self.gwangyeok_dict = gwangyeok_dict
         self.sigungu_dict = sigungu_dict
         self.hdong_dict = hdong_dict
@@ -41,101 +36,147 @@ class AgePopulationAnalysis:
     # ==============================================================================
     # 광역시별 / 시도 시군구 읍면동별 연령별 비중: 행정구역(읍면동)별/5세별 주민등록인구(2011년~)
     # ==============================================================================
-    def get_age_population_data(self):
-        data = []  # 광역시명, 연령대, 수치값을 저장할 리스트
-        orgId = "101"  # 기관ID
-        tblId = "DT_1B04005N"  # 통계표ID
-        itmId = "T2"  # 항목ID: 총인구수 항목
-        prdSe = "Y"  # 수록주기
-        max_year = self.get_latest_year(orgId, tblId)
-        # 연령대 매핑 함수 (10세 단위로 그룹화)
-        def get_age_group(value):
-            if value == 0:
-                return '전체'
-            elif value >= 60:
-                return '60세+'
-            else:
-                lower_bound = (value - 5) // 10 * 10
-                upper_bound = lower_bound + 9
-                return f'{lower_bound}-{upper_bound}세'
-        for objL2_value in range(0, 110, 5):  # 0부터 105까지 5세 간격
-            if self.gwangyeok_dict:
-                for gwangyeok_name, gwangyeok_code in self.gwangyeok_dict.items():
-                    df = self.api.get_data(
-                        "통계자료",
-                        orgId=orgId,
-                        tblId=tblId,
-                        objL1=gwangyeok_code, # 분류값ID1
-                        objL2=str(objL2_value), # 분류값ID2
-                        itmId=itmId,
-                        prdSe=prdSe,
-                        startPrdDe=max_year,
-                        endPrdDe=max_year,
-                    )
-                    if df is not None and not df.empty:
-                        value = df['수치값'].sum()
-                        data.append({
-                            '구분': gwangyeok_name,
-                            '연령대': get_age_group(objL2_value),
-                            '연령대숫자': objL2_value,
-                            '수치값': value
-                        })
-            if self.sigungu_dict:
-                for sigungu_name, sigungu_code in self.sigungu_dict.items():
-                    df = self.api.get_data(
-                        "통계자료",
-                        orgId=orgId,
-                        tblId=tblId,
-                        objL1=sigungu_code[:5], # 분류값ID1
-                        objL2=str(objL2_value), # 분류값ID2
-                        itmId=itmId,
-                        prdSe=prdSe,
-                        startPrdDe=max_year,
-                        endPrdDe=max_year,
-                    )
-                    if df is not None and not df.empty:
-                        value = df['수치값'].sum()
-                        data.append({
-                            '구분': sigungu_name,
-                            '연령대': get_age_group(objL2_value),
-                            '연령대숫자': objL2_value,
-                            '수치값': value
-                        })
-            if self.hdong_dict:
-                for hdong_name, hdong_code in self.hdong_dict.items():
-                    df = self.api.get_data(
-                        "통계자료",
-                        orgId=orgId,
-                        tblId=tblId,
-                        objL1=hdong_code,
-                        objL2=str(objL2_value),
-                        itmId=itmId,
-                        prdSe=prdSe,
-                        startPrdDe=max_year,
-                        endPrdDe=max_year,
-                    )
-                    if df is not None and not df.empty:
-                        value = df['수치값'].sum()
-                        data.append({
-                            '구분': hdong_name,
-                            '연령대': get_age_group(objL2_value),
-                            '연령대숫자': objL2_value,
-                            '수치값': value
-                        })
-        # 데이터가 없는 경우 대비
-        if not data:
-            print("⚠️ 결과 데이터가 없습니다. API 응답을 확인하세요.")
-            return pd.DataFrame()
-        # 데이터프레임 생성 후 10세 단위로 그룹화 및 피벗
-        result_df = pd.DataFrame(data)
-        result_df['수치값'] = pd.to_numeric(result_df['수치값'], errors='coerce')
-        # 10세 단위로 그룹화하여 합산
-        grouped_df = result_df.groupby(['구분', '연령대']).agg({'수치값': 'sum'}).reset_index()
-        # 연령대 기준으로 피벗 테이블 생성
-        pivot_df = grouped_df.pivot_table(index='구분', columns='연령대', values='수치값', aggfunc='sum').reset_index()
-        pivot_df.set_index('구분', inplace=True)
-        pivot_df = pivot_df.apply(pd.to_numeric, errors='coerce')
-        return pivot_df
+    # 연령대 매핑 함수 (10세 단위로 그룹화)
+    def get_age_group(self, value):
+        if value == 0:
+            return '전체'
+        elif value >= 60:
+            return '60세+'
+        else:
+            lower_bound = (value - 5) // 10 * 10
+            upper_bound = lower_bound + 9
+            return f'{lower_bound}-{upper_bound}세'
+
+    def get_age_population_data(self, sigunguhdong_name, sigunguhdong_dict, df_save, sigunguhdong_type):
+        """
+        시군구 또는 행정동별 인구 데이터를 가져와서 df_age에 저장하는 함수
+        :param sigunguhdong_name: 시도 또는 시군구 또는 행정동 이름
+        :param sigunguhdong_dict: 해당 시군구/행정동의 코드 딕셔너리
+        :param df_save: 데이터 저장할 DataFrame
+        :param sigunguhdong_type: 'sido' 또는 'gungu' 또는 'hdong' (구분값)
+        """
+
+        sigunguhdong_code = (
+            sigunguhdong_dict['전체'][:2] if sigunguhdong_type == 'sido' else
+            sigunguhdong_dict['전체'][:5] if sigunguhdong_type == 'gungu' else
+            sigunguhdong_dict[sigunguhdong_name]
+        )
+        max_year = self.get_latest_year("101", "DT_1B04005N")
+        df = api.get_data(
+            "통계자료",
+            orgId="101",
+            tblId="DT_1B04005N",
+            objL1=sigunguhdong_code,  # 분류값ID1
+            objL2='ALL',  # 모든 연령대 포함
+            itmId="T2",  # 항목ID: 총인구수 항목
+            prdSe="Y",  # 수록주기
+            startPrdDe=max_year,
+            endPrdDe=max_year,
+        )
+
+        for objL2_value in range(0, 110, 5):
+            age_group = self.get_age_group(objL2_value)
+            df_save.loc[sigunguhdong_name, age_group] = df[df['분류값ID2'].astype(int) == objL2_value]['수치값'].sum()
+
+        return df_save
+
+    # def get_age_population_data(self):
+    #     data = []  # 광역시명, 연령대, 수치값을 저장할 리스트
+    #     orgId = "101"  # 기관ID
+    #     tblId = "DT_1B04005N"  # 통계표ID
+    #     itmId = "T2"  # 항목ID: 총인구수 항목
+    #     prdSe = "Y"  # 수록주기
+    #     max_year = self.get_latest_year(orgId, tblId)
+    #
+    #     # 연령대 매핑 함수 (10세 단위로 그룹화)
+    #     def get_age_group(value):
+    #         if value == 0:
+    #             return '전체'
+    #         elif value >= 60:
+    #             return '60세+'
+    #         else:
+    #             lower_bound = (value - 5) // 10 * 10
+    #             upper_bound = lower_bound + 9
+    #             return f'{lower_bound}-{upper_bound}세'
+    #     for objL2_value in range(0, 110, 5):  # 0부터 105까지 5세 간격
+    #         if self.gwangyeok_dict:
+    #             for gwangyeok_name, gwangyeok_code in self.gwangyeok_dict.items():
+    #                 df = self.api.get_data(
+    #                     "통계자료",
+    #                     orgId=orgId,
+    #                     tblId=tblId,
+    #                     objL1=gwangyeok_code, # 분류값ID1
+    #                     objL2=str(objL2_value), # 분류값ID2
+    #                     itmId=itmId,
+    #                     prdSe=prdSe,
+    #                     startPrdDe=max_year,
+    #                     endPrdDe=max_year,
+    #                 )
+    #                 if df is not None and not df.empty:
+    #                     value = df['수치값'].sum()
+    #                     data.append({
+    #                         '구분': gwangyeok_name,
+    #                         '연령대': get_age_group(objL2_value),
+    #                         '연령대숫자': objL2_value,
+    #                         '수치값': value
+    #                     })
+    #         if self.sigungu_dict:
+    #             for sigungu_name, sigungu_code in self.sigungu_dict.items():
+    #                 df = self.api.get_data(
+    #                     "통계자료",
+    #                     orgId=orgId,
+    #                     tblId=tblId,
+    #                     objL1=sigungu_code[:5], # 분류값ID1
+    #                     objL2=str(objL2_value), # 분류값ID2
+    #                     itmId=itmId,
+    #                     prdSe=prdSe,
+    #                     startPrdDe=max_year,
+    #                     endPrdDe=max_year,
+    #                 )
+    #                 if df is not None and not df.empty:
+    #                     value = df['수치값'].sum()
+    #                     data.append({
+    #                         '구분': sigungu_name,
+    #                         '연령대': get_age_group(objL2_value),
+    #                         '연령대숫자': objL2_value,
+    #                         '수치값': value
+    #                     })
+    #         if self.hdong_dict:
+    #             for hdong_name, hdong_code in self.hdong_dict.items():
+    #                 df = self.api.get_data(
+    #                     "통계자료",
+    #                     orgId=orgId,
+    #                     tblId=tblId,
+    #                     objL1=hdong_code,
+    #                     objL2=str(objL2_value),
+    #                     itmId=itmId,
+    #                     prdSe=prdSe,
+    #                     startPrdDe=max_year,
+    #                     endPrdDe=max_year,
+    #                 )
+    #                 if df is not None and not df.empty:
+    #                     value = df['수치값'].sum()
+    #                     data.append({
+    #                         '구분': hdong_name,
+    #                         '연령대': get_age_group(objL2_value),
+    #                         '연령대숫자': objL2_value,
+    #                         '수치값': value
+    #                     })
+    #     # 데이터가 없는 경우 대비
+    #     if not data:
+    #         print("⚠️ 결과 데이터가 없습니다. API 응답을 확인하세요.")
+    #         return pd.DataFrame()
+    #     # 데이터프레임 생성 후 10세 단위로 그룹화 및 피벗
+    #     result_df = pd.DataFrame(data)
+    #     result_df['수치값'] = pd.to_numeric(result_df['수치값'], errors='coerce')
+    #     # 10세 단위로 그룹화하여 합산
+    #     grouped_df = result_df.groupby(['구분', '연령대']).agg({'수치값': 'sum'}).reset_index()
+    #     # 연령대 기준으로 피벗 테이블 생성
+    #     pivot_df = grouped_df.pivot_table(index='구분', columns='연령대', values='수치값', aggfunc='sum').reset_index()
+    #     pivot_df.set_index('구분', inplace=True)
+    #     pivot_df = pivot_df.apply(pd.to_numeric, errors='coerce')
+    #     print(pivot_df)
+    #     return pivot_df
 
     # ==============================================================================
     # 광역시별 / 시도 시군구 읍면동별 연령별 비중 그래프 그리기
@@ -327,23 +368,58 @@ class AgePopulationAnalysis:
         else:
             return None
 
-# api = Kosis("YWZhOWE3ZjgxYzY0YThkYWRmMDgyYzQzZDZjMjM2NTk=")
-# item = api.get_data(
-#     "통계표설명",
-#     "분류항목",
-#     orgId="537",
-#     tblId="DT_53701_B001005",
-# )
-# print(item)
-# df = api.get_data(
-#     service_name="통계자료",  # 서비스명: '통계자료'로 수정
-#     orgId="537",  # 기관 ID: '101'은 해당 통계를 제공하는 기관 ID
-#     tblId="DT_53701_B001005",  # 통계표 ID: 통계표 ID는 실제 통계 표에 해당하는 고유 ID (예: 'DT_1B040B3')
-#     objL1="I_9 I_11",  # 분류ID: 'A'는 행정구역별 통계 자료를 요청하는 항목 hdong_code
-#     objL2="11101BSM2107051", # "ALL"
-#     itmId="ALL",  # 분류값ID: 'T1'은 세대수와 관련된 항목
-#     prdSe="Y",  # 수록주기: 'Y'는 연간 기준 데이터 요청
-#     startPrdDe="2022",  # 시작 기간: '202211'은 2022년 11월
-#     endPrdDe="2022",  # 종료 기간: 동일한 2022년 11월
-# )
-# print(df)
+########################
+# 모든 행, 모든 열 출력 설정
+pd.set_option('display.max_rows', None)  # 모든 행 출력
+pd.set_option('display.max_columns', None)  # 모든 열 출력
+pd.set_option('display.width', None)  # 가로 길이 자동 조정
+pd.set_option('display.expand_frame_repr', False)  # 줄바꿈 방지
+
+
+api = Kosis("YWZhOWE3ZjgxYzY0YThkYWRmMDgyYzQzZDZjMjM2NTk=")
+
+
+
+#############################################
+# # 연령대 매핑 함수 (10세 단위로 그룹화)
+# def get_age_group(value):
+#     if value == 0:
+#         return '전체'
+#     elif value >= 60:
+#         return '60세+'
+#     else:
+#         lower_bound = (value - 5) // 10 * 10
+#         upper_bound = lower_bound + 9
+#         return f'{lower_bound}-{upper_bound}세'
+#
+# def get_age_population_data(sigunguhdong_name, sigunguhdong_dict, df_save, sigunguhdong_type):
+#     """
+#     시군구 또는 행정동별 인구 데이터를 가져와서 df_age에 저장하는 함수
+#     :param sigunguhdong_name: 시도 또는 시군구 또는 행정동 이름
+#     :param sigunguhdong_dict: 해당 시군구/행정동의 코드 딕셔너리
+#     :param df_save: 데이터 저장할 DataFrame
+#     :param sigunguhdong_type: 'sido' 또는 'gungu' 또는 'hdong' (구분값)
+#     """
+#     sigunguhdong_code = (
+#         sigunguhdong_dict['전체'][:2] if sigunguhdong_type == 'sido' else
+#         sigunguhdong_dict['전체'][:5] if sigunguhdong_type == 'gungu' else
+#         sigunguhdong_dict[sigunguhdong_name]
+#     )
+#     max_year = self.get_latest_year(orgId, tblId)
+#     df = api.get_data(
+#         "통계자료",
+#         orgId="101",
+#         tblId="DT_1B04005N",
+#         objL1=sigunguhdong_code,  # 분류값ID1
+#         objL2='ALL',  # 모든 연령대 포함
+#         itmId="T2", # 항목ID: 총인구수 항목
+#         prdSe="Y", # 수록주기
+#         startPrdDe=max_year,
+#         endPrdDe=max_year,
+#     )
+#
+#     for objL2_value in range(0, 110, 5):
+#         age_group = get_age_group(objL2_value)
+#         df_save.loc[sigunguhdong_name, age_group] = df[df['분류값ID2'].astype(int) == objL2_value]['수치값'].sum()
+
+

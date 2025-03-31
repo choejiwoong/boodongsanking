@@ -1,7 +1,7 @@
 from pymongo import MongoClient
 
 # MongoDB 연결 함수
-def connect_to_mongodb(uri, db_name, collection_name):
+def connect_to_mongodb(uri="mongodb+srv://wldndchl0926:oklove0610!@boodongsancluster.fo8xa.mongodb.net/?retryWrites=true&w=majority&appName=boodongsanCluster", db_name=None, collection_name=None):
     client = MongoClient(uri)
     db = client[db_name]
     collection = db[collection_name]
@@ -36,3 +36,8 @@ def overwrite_document(collection, query, new_values):
 def delete_document(collection, query):
     result = collection.delete_one(query)
     return f"Deleted documents count: {result.deleted_count}"
+
+# 콜렉션 삭제 함수
+def delete_collection(collection):
+    result = collection.drop()
+    return f"콜렉션 삭제: {collection}"

@@ -457,6 +457,49 @@ class KosisDataFetcher:
             df_filtered_sigungu = df[df['구분ID'].str.contains(df_set_sigungu.values[0], na=False)]  # 시군구 코드
             return df_filtered_sigungu
 
+    def get_bjoong(self):
+        df = pd.DataFrame()
+        # ==============================================================================
+        # # 부산광역시 시군구 소득비중
+        # # ==============================================================================
+        # 해마다 달라짐
+        item = self.api.get_data(
+            "통계자료",
+            orgId="202",
+            tblId="DT_202005Y2024N063",
+            itmId="ALL",
+            objL1="ALL",  # 부산
+            objL2="ALL",
+            prdSe="Y",
+            startPrdDe="2024",
+            endPrdDe="2024",
+        )
+
+        copy_item = item.copy()
+        df['구분'] = copy_item['분류값명1']
+        copy_item['수치값'] = pd.to_numeric(copy_item['수치값'], errors='coerce')
+        copy_item['수치값'] = copy_item['수치값'].fillna(0)
+        df['50만원 미만'] = copy_item.loc[(copy_item['분류값ID2'] == '1053'), '수치값']
+        df['50~100만원'] = copy_item.loc[(copy_item['분류값ID2'] == '2054'), '수치값']
+        df['100~200만원'] = copy_item.loc[(copy_item['분류값ID2'] == '3055'), '수치값']
+        df['200~300만원'] = copy_item.loc[(copy_item['분류값ID2'] == '4056'), '수치값']
+        df['300~400만원'] = copy_item.loc[(copy_item['분류값ID2'] == '5057'), '수치값']
+        df['400~500만원'] = copy_item.loc[(copy_item['분류값ID2'] == '6058'), '수치값']
+        df['500~600만원'] = copy_item.loc[(copy_item['분류값ID2'] == '7059'), '수치값']
+        df['600~700만원'] = copy_item.loc[(copy_item['분류값ID2'] == '8060'), '수치값']
+        df['700~800만원'] = copy_item.loc[(copy_item['분류값ID2'] == '9061'), '수치값']
+        df['800만원 이상'] = copy_item.loc[(copy_item['분류값ID2'] == '10062'), '수치값']
+
+        # 시군구만 포함된 행 필터링
+        filtered_df = df[df['구분'].str.contains('구$', na=False)]
+        # 그룹별로 NaN 값을 채워넣고 중복 행 제거
+        df_cleaned = filtered_df.groupby("구분").max()
+        # 결과 출력
+        df_cleaned['저소득층 비중'] = df_cleaned['50만원 미만'] + df_cleaned['50~100만원'] + df_cleaned['100~200만원']
+        df_cleaned['중산층 비중'] = df_cleaned['400~500만원']
+        df_cleaned['고소득층 비중'] = df_cleaned['700~800만원'] + df_cleaned['800만원 이상']
+        return df_cleaned
+
 # gwangyeok_dict = {'부산광역시': '260000', '대구광역시': '315555'}
 # # sigungu_dict = {'연제구': '260000000', '해운대구': '250000000', '해운대ㅇㅇㅇ구': '250000000', '해ㄴㄹㄴㅇㅁㄹ대구': '250000000', '해운대ㄹㅁㄴㄹ': '250000000', '해ㅇ': '250000000', 'ㅇㅇ': '250000000'}  # 예시 데이터
 #
@@ -494,10 +537,11 @@ df = pd.DataFrame()
 #     endPrdDe="2021",
 # )
 
+# 해마다 달라짐
 item = api.get_data(
     "통계자료",
     orgId="202",
-    tblId="DT_202005Y2024N063", # DT_202005Y2023N038
+    tblId="DT_202005Y2024N063",
     itmId="ALL",
     objL1="ALL",  # 부산
     objL2="ALL",
@@ -506,8 +550,32 @@ item = api.get_data(
     endPrdDe="2024",
 )
 
+# print(item.loc[(item['분류값ID2'] == '1053'), '수치값'] ) # &
+copy_item = item.copy()
+df['구분'] = copy_item['분류값명1']
+copy_item['수치값'] = pd.to_numeric(copy_item['수치값'], errors='coerce')
+copy_item['수치값'] = copy_item['수치값'].fillna(0)
+df['50만원 미만'] = copy_item.loc[(copy_item['분류값ID2'] == '1053'), '수치값']
+df['50~100만원'] = copy_item.loc[(copy_item['분류값ID2'] == '2054'), '수치값']
+df['100~200만원'] = copy_item.loc[(copy_item['분류값ID2'] == '3055'), '수치값']
+df['200~300만원'] = copy_item.loc[(copy_item['분류값ID2'] == '4056'), '수치값']
+df['300~400만원'] = copy_item.loc[(copy_item['분류값ID2'] == '5057'), '수치값']
+df['400~500만원'] = copy_item.loc[(copy_item['분류값ID2'] == '6058'), '수치값']
+df['500~600만원'] = copy_item.loc[(copy_item['분류값ID2'] == '7059'), '수치값']
+df['600~700만원'] = copy_item.loc[(copy_item['분류값ID2'] == '8060'), '수치값']
+df['700~800만원'] = copy_item.loc[(copy_item['분류값ID2'] == '9061'), '수치값']
+df['800만원 이상'] = copy_item.loc[(copy_item['분류값ID2'] == '10062'), '수치값']
 
-print(item)
+# 시군구만 포함된 행 필터링
+filtered_df = df[df['구분'].str.contains('구$', na=False)]
+# 그룹별로 NaN 값을 채워넣고 중복 행 제거
+df_cleaned = filtered_df.groupby("구분").max()
+# 결과 출력
+df_cleaned['저소득층 비중'] = df_cleaned['50만원 미만'] + df_cleaned['50~100만원'] + df_cleaned['100~200만원']
+df_cleaned['중산층 비중'] = df_cleaned['400~500만원']
+df_cleaned['고소득층 비중'] = df_cleaned['700~800만원'] + df_cleaned['800만원 이상']
+# print(df_cleaned)
+
 
 # for i in range(10):
 #     item = api.get_data(

@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+from ..streamlit_db import *
 
 # 페이지 기본 설정
 st.set_page_config(
@@ -28,6 +29,9 @@ if 'jikjang_income_gwangyeok' not in st.session_state:
     st.session_state.jikjang_income_gwangyeok = None  # 초기값 설정 (None, 빈 문자열, 또는 적당한 값)
 if 'jikjang_income_sigungu' not in st.session_state:
     st.session_state.jikjang_income_sigungu = None  # 초기값 설정 (None, 빈 문자열, 또는 적당한 값)
+if 'jikjang_bjoong_sigungu' not in st.session_state:
+    st.session_state.jikjang_bjoong_sigungu = None  # 초기값 설정 (None, 빈 문자열, 또는 적당한 값)
+
 
 
 if st.session_state.jikjang_gwangyeok_df is None:
@@ -50,7 +54,7 @@ else:
         st.dataframe(st.session_state.jikjang_income_gwangyeok)
 
     # 두 개의 열을 생성
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
     with col1:
         jikjang_sigungu_df = st.session_state.jikjang_sigungu_df
         st.dataframe(jikjang_sigungu_df, use_container_width=True)
@@ -61,3 +65,6 @@ else:
         # st.plotly_chart(st.session_state.jikjang_sigungu_industry_plotly)
     with col3:
         st.dataframe(st.session_state.jikjang_income_sigungu)
+
+    with col4:
+        st.dataframe(st.session_state.jikjang_bjoong_sigungu)

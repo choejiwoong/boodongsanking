@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 from click import style
+from streamlit_db import *
 
 from crawler_ingoo import *
 from crawler_sigungu import *
@@ -21,59 +22,26 @@ st.set_page_config(
     layout="wide",
 )
 st.header("💡 부동산 임장보고서")
-# mongodb 'sigungu' collection 연결
-uri = 'mongodb+srv://wldndchl0926:oklove0610!@boodongsancluster.fo8xa.mongodb.net/?retryWrites=true&w=majority&appName=boodongsanCluster'
-db_name = "db"
-collection_name = 'sigungu'
-collection_sigungu = connect_to_mongodb(uri, db_name, collection_name)
 
 # ==============================================================================
 # 시군구명 selectbox data mongodb에서 불러오기
 # ==============================================================================
 # 데이터가 있으면 시군구 구분 선택할 수 있는 콤보박스 현시
-query = {'_id': ObjectId('67a09c8bc9f63336ba4040c1')}
-projection = {'_id': 0}  # _id 제외
-if find_documents(collection_sigungu, query):
-    sigungu_dict = find_documents(collection_sigungu, query, projection)
+collection = connect_to_mongodb(db_name='db', collection_name='sigungu')
+if get_all_documents(collection):
+    sigunguhdong_dict = collection.find_one({}, {"_id": 0})
     # sigungu_dict session_state에 저장
-    if 'sigungu_dict' not in st.session_state or st.session_state.sigungu_dict != sigungu_dict[0]:
-        st.session_state.sigungu_dict = sigungu_dict[0]
+    st.session_state.sigunguhdong_dict = sigunguhdong_dict
 
     # 도시 선택 selectedbox
-    selected_sido = st.selectbox('도시를 선택하세요.', list(sigungu_dict[0].keys()), index=1)
+    selected_sido = st.selectbox('도시를 선택하세요.', list(sigunguhdong_dict.keys()), index=1)
     # 선택된 시도 session_state에 저장
-    if 'selected_sido' not in st.session_state or st.session_state.selected_sido != selected_sido:
-        st.session_state.selected_sido = selected_sido
-    # 시군구 선택 selectedbox
-    selected_sigungu = st.selectbox('시군구를 선택하세요.', sigungu_dict[0][selected_sido].keys())
-    # 선택된 시군구 session_state에 저장
-    if 'selected_sigungu' not in st.session_state or st.session_state.selected_sigungu != selected_sigungu:
-        st.session_state.selected_sigungu = selected_sigungu
-    # print(st.session_state.sigungu_dict[selected_sido].keys())
+    st.session_state.selected_sido = selected_sido
 
-# ==============================================================================
-# 정보수집 버튼들
-# ==============================================================================
-# ==============================================================================
-# 시군구명 selectbox data 크롤링 버튼(유사시)
-# ==============================================================================
-# if st.button("시군구명 다시 불러오기"):
-#     # 시군구명 불러오기
-#     code = SigunguCode()
-#     code.load_sigungu_name()
-#     sigungu_name = code.get_sigungu_name_dict()
-#     # 시군구명 mongodb 덮어쓰기
-#     overwrite_document(collection_sigungu, query, sigungu_name)
-#     st.success('시군구명 업데이트 완료!')
-#
-# # 행정동명 불러오기
-# if st.session_state.selected_sigungu:
-#     code = SigunguCode(sigungu_name=st.session_state.selected_sigungu)
-#     code.load_hdong()
-#     hdong_name = code.get_hdong_dict()
-#     # 시군구명 mongodb 덮어쓰기
-#     overwrite_document(collection_sigungu, query, hdong_name)
-#     st.success('행정동명 업데이트 완료!')
+    # 시군구 선택 selectedbox
+    selected_gungu = st.selectbox('시군구를 선택하세요.', sigunguhdong_dict[selected_sido].keys())
+    # 선택된 시군구 session_state에 저장
+    st.session_state.selected_gungu = selected_gungu
 
 # ==============================================================================
 # 데이터 수집 버튼
@@ -81,18 +49,45 @@ if find_documents(collection_sigungu, query):
 # '광역시'가 포함된 시군구명만 dict로 만들기
 gwangyeok_dict = {
     sido: sigungu_dict["전체"][:2]  # '전체' 키의 값을 가져옴
-    for sido, sigungu_dict in st.session_state.sigungu_dict.items()
+    for sido, sigungu_dict in st.session_state.sigunguhdong_dict.items()
     if "광역시" in sido and "전체" in sigungu_dict  # '광역시' 포함 + '전체' 키가 있는 경우만
 }
 
 
 if st.button("😊 인구 데이터 수집", use_container_width=True):
     with st.spinner('잠시만 기다려주세요. 데이터를 불러오는 중입니다...⏳'):
-        if selected_sigungu != '전체':
+        if selected_gungu != '전체':
             # ==============================================================================
             # 광역시별 인구 데이터
             # ==============================================================================
-            code_gwangyeok = AgePopulationAnalysis(gwangyeok_dict=gwangyeok_dict)
+
+            selected_sido = st.session_state.selected_sido
+            df_age_sido = pd.DataFrame()
+            df_age_gungu = pd.DataFrame()
+            df_age_hdong = pd.DataFrame()
+            sigunguhdong_dict = st.session_state.sigunguhdong_dict
+            ingoo = Ingoo()
+            # 시도 데이터 가져오기
+            for sido_name, sido_dict in sigunguhdong_dict.items():
+                ingoo.get_age_population_data(sido_name, sido_dict, df_age_sido, 'sido')
+            # 시군구 데이터 가져오기
+            for gungu_name, gungu_dict in sigunguhdong_dict[selected_sido].items():
+                if gungu_name == "전체":
+                    continue
+                ingoo.get_age_population_data(gungu_name, gungu_dict, df_age_gungu, 'gungu')
+            # 행정동 데이터 가져오기
+            for hdong_name, hdong_code in sigunguhdong_dict[selected_sido][selected_gungu].items():
+                if hdong_name == "전체":
+                    continue
+                ingoo.get_age_population_data(hdong_name, sigunguhdong_dict[selected_sido][selected_gungu], df_age_hdong,'hdong')
+            # session_state 에 저장하기
+            st.session_state.df_age_sido = df_age_sido
+            st.session_state.df_age_gungu = df_age_gungu
+            st.session_state.df_age_hdong = df_age_hdong
+            ########################################## 2025/04/01 이까지~~~
+
+            code_gwangyeok = Ingoo(gwangyeok_dict=gwangyeok_dict)
+            # 광역시별 연령별 비중
             get_age_population_data_gwangyeok = code_gwangyeok.get_age_population_data()
             st.session_state.get_age_population_data_gwangyeok = get_age_population_data_gwangyeok
             # 세대수
@@ -109,9 +104,9 @@ if st.button("😊 인구 데이터 수집", use_container_width=True):
             # ==============================================================================
             # 시군구별 인구 데이터
             # ==============================================================================
-            sigungu_dict = st.session_state.sigungu_dict[selected_sido]
+            sigungu_dict = st.session_state.sigunguhdong_dict[selected_sido]
             sigungu_dict_filtered = {key: value['전체'] for key, value in sigungu_dict.items() if isinstance(value, dict)}
-            code_sigungu = AgePopulationAnalysis(sigungu_dict=sigungu_dict_filtered)
+            code_sigungu = Ingoo(sigungu_dict=sigungu_dict_filtered)
             get_age_population_data_sigungu = code_sigungu.get_age_population_data()
             st.session_state.get_age_population_data_sigungu = get_age_population_data_sigungu
             # 세대수
@@ -130,9 +125,9 @@ if st.button("😊 인구 데이터 수집", use_container_width=True):
             # 행정동별 인구 데이터
             # ==============================================================================
             selected_sido = st.session_state.selected_sido
-            selected_sigungu = st.session_state.selected_sigungu
-            hdong_dict = st.session_state.sigungu_dict[selected_sido][selected_sigungu]
-            code_hdong = AgePopulationAnalysis(hdong_dict=hdong_dict)
+            selected_gungu = st.session_state.selected_gungu
+            hdong_dict = st.session_state.sigunguhdong_dict[selected_sido][selected_gungu]
+            code_hdong = Ingoo(hdong_dict=hdong_dict)
             get_age_population_data_hdong = code_hdong.get_age_population_data()
             st.session_state.get_age_population_data_hdong = get_age_population_data_hdong
             st.session_state.get_age_population_plotly_hdong = code_hdong.get_age_population_plotly(get_age_population_data_hdong)
@@ -152,7 +147,7 @@ if st.button("😊 인구 데이터 수집", use_container_width=True):
 # ==============================================================================
 if st.button("🏙 직장 데이터 수집", use_container_width=True):
     with st.spinner('잠시만 기다려주세요. 데이터를 불러오는 중입니다...⏳'):
-        if selected_sigungu != '전체':
+        if selected_gungu != '전체':
             # 직장 관련 인스턴스 생성
             # 광역시
             fetcher = KosisDataFetcher(gwangyeok_dict=gwangyeok_dict)
@@ -169,6 +164,7 @@ if st.button("🏙 직장 데이터 수집", use_container_width=True):
             st.session_state.jikjang_sigungu_industry_df = fetcher.fetch_and_process_industry_data()
             # st.session_state.jikjang_sigungu_industry_plotly = fetcher.get_plotly(st.session_state.jikjang_sigungu_industry_df)
             st.session_state.jikjang_income_sigungu = fetcher.get_income()
+            st.session_state.jikjang_bjoong_sigungu = fetcher.get_bjoong()
 
             st.success('🏙_2. 직장 데이터 불러오기 완료')
         else:
@@ -178,18 +174,18 @@ if st.button("🏙 직장 데이터 수집", use_container_width=True):
 # ==============================================================================
 if st.button("🎓 학군 데이터 수집", use_container_width=True):
     with st.spinner('잠시만 기다려주세요. 데이터를 불러오는 중입니다...⏳'):
-        if selected_sigungu != '전체':
+        if selected_gungu != '전체':
             # 학업성취도 관련 인스턴스 생성
-            school_achievement = SchoolAchievement(selected_sido, selected_sigungu, gwangyeok_dict, st.session_state.sigungu_dict)
+            school_achievement = SchoolAchievement(selected_sido, selected_gungu, gwangyeok_dict, st.session_state.sigungu_dict)
             # 중학교 학업성취도 관련 크롤링
             st.session_state.fetch_mid_school_achievement = school_achievement.fetch_school_achievement("3")
-            filtered_data = [item for item in st.session_state.fetch_mid_school_achievement if item['구분'] == selected_sigungu]
+            filtered_data = [item for item in st.session_state.fetch_mid_school_achievement if item['구분'] == selected_gungu]
             st.session_state.mid_school_achievement_ranking = school_achievement.calculate_ranking(filtered_data)
             # 고등학교 학업성취도 관련 크롤링
             st.session_state.fetch_high_school_achievement = school_achievement.fetch_school_achievement("4")
 
             # 초등학교 관련 인스턴스 생성
-            region_code = st.session_state.sigungu_dict[selected_sido][selected_sigungu]["전체"][:5]
+            region_code = st.session_state.sigungu_dict[selected_sido][selected_gungu]["전체"][:5]
             school_info_api = SchoolInfoAPI(region_code)
             # 데이터 크롤링
             elem_school_data = school_info_api.fetch_elem_school_data()
@@ -203,7 +199,7 @@ if st.button("🎓 학군 데이터 수집", use_container_width=True):
 # ==============================================================================
 if st.button("🏖 환경 데이터 수집", use_container_width=True):
     with st.spinner('잠시만 기다려주세요. 데이터를 불러오는 중입니다...⏳'):
-        if selected_sigungu != '전체':
+        if selected_gungu != '전체':
             # 환경 관련 인스턴스 생성
             place_seacher = PlaceSearcher()
             # 환경 관련 크롤링
@@ -211,7 +207,7 @@ if st.button("🏖 환경 데이터 수집", use_container_width=True):
             sigungu_names = [name for name in sigungu_names if name != '전체']  # "전체" 제외
             final_df, all_places_df = place_seacher.get_results_for_sgg(selected_sido, sigungu_names)
             st.session_state.hwangyeong_tuple = final_df, all_places_df
-            st.session_state.hwangyeong_ranking = place_seacher.calculate_ranking(final_df, selected_sigungu)
+            st.session_state.hwangyeong_ranking = place_seacher.calculate_ranking(final_df, selected_gungu)
             st.success('🏖_4. 환경 데이터 불러오기 완료')
         else:
             st.error('☢ 시군구명을 선택해주세요!')
@@ -220,7 +216,7 @@ if st.button("🏖 환경 데이터 수집", use_container_width=True):
 # ==============================================================================
 if st.button("🚇 교통 데이터 수집", use_container_width=True):
     with st.spinner('잠시만 기다려주세요. 데이터를 불러오는 중입니다...⏳'):
-        if selected_sigungu != '전체':
+        if selected_gungu != '전체':
             # 교통 관련 인스턴스 생성
             gyotong = Gyotong()
             # 지하철 버스 수송분담률 관련 크롤링
