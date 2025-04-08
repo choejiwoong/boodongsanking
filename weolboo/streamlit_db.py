@@ -1,3 +1,5 @@
+### streamlit mongodb 문서는 여기 참고: https://docs.streamlit.io/develop/tutorials/databases/mongodb
+
 from pymongo import MongoClient
 
 # MongoDB 연결 함수

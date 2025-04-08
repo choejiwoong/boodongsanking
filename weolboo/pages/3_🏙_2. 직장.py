@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
-from ..streamlit_db import *
+
+# client = st.session_state.client
 
 # 페이지 기본 설정
 st.set_page_config(
