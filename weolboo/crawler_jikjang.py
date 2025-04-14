@@ -295,7 +295,7 @@ class KosisDataFetcher:
         copy_df = new_df.copy()
 
         if self.gwangyeok_dict is not None:
-            copy_df['총인구수'] = st.session_state.get_population_data_gwangyeok['수치값']
+            copy_df['총인구수'] = st.session_state.df_sido['총인구수']
             copy_df['총인구수'] = pd.to_numeric(copy_df['총인구수'], errors='coerce')
             copy_df['사업체수'] = pd.to_numeric(copy_df['사업체수'], errors='coerce')
             copy_df['종사자수'] = pd.to_numeric(copy_df['종사자수'], errors='coerce')
@@ -309,7 +309,7 @@ class KosisDataFetcher:
             copy_df['500인 이상 사업체수'] = copy_df['500인 이상 사업체수'].apply(lambda x: f'{x:,}' if isinstance(x, (int, float)) else x)
 
         else:
-            copy_df['총인구수'] = st.session_state.get_population_data_sigungu['수치값']
+            copy_df['총인구수'] = st.session_state.df_gungu['총인구수']
             copy_df['총인구수'] = pd.to_numeric(copy_df['총인구수'], errors='coerce')
             copy_df['사업체수'] = pd.to_numeric(copy_df['사업체수'], errors='coerce')
             copy_df['종사자수'] = pd.to_numeric(copy_df['종사자수'], errors='coerce')

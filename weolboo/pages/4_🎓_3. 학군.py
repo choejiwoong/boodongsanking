@@ -69,12 +69,12 @@ if st.session_state.fetch_mid_school_achievement:
     # ==============================================================================
     # 시군구별 중학교 학업성취도
     # ==============================================================================
-    st.subheader(f'{st.session_state.selected_sigungu} 중학교 학업성취도')
+    st.subheader(f'{st.session_state.selected_gungu} 중학교 학업성취도')
     df = pd.DataFrame(data=st.session_state.fetch_mid_school_achievement)
     # selected_sigungu 값이 '전체'가 아니면 필터링하여 해당 값만 가져오기
-    if st.session_state.selected_sigungu != '전체':
+    if st.session_state.selected_gungu != '전체':
         # selected_sigungu에 맞는 데이터만 필터링
-        selected_sigungu_df = df[df['구분'] == st.session_state.selected_sigungu]
+        selected_sigungu_df = df[df['구분'] == st.session_state.selected_gungu]
         no_special_city_df = df[~df['구분'].str.contains('광역시')]
 
         # 학업성취도 컬럼을 숫자형으로 변환
@@ -210,7 +210,7 @@ if st.session_state.fetch_mid_school_achievement:
             # selected_sigungu에 맞는 데이터만 필터링
             selected_sido_df = df[df['구분'] == st.session_state.selected_sido].head(20)
             selected_sido_df = selected_sido_df.drop('구분', axis=1)
-            count = selected_sido_df['위치'].str.contains(st.session_state.selected_sigungu).sum()
+            count = selected_sido_df['위치'].str.contains(st.session_state.selected_gungu).sum()
             selected_sido_df = selected_sido_df.set_index("위치")
             st.dataframe(selected_sido_df, use_container_width=True)
 
@@ -244,7 +244,7 @@ if st.session_state.fetch_mid_school_achievement:
                     </a>
                 """, unsafe_allow_html=True)
 
-            default_text = f"명문 고등학교 TOP20에 {st.session_state.selected_sigungu}는 총 {count}개 있습니다."
+            default_text = f"명문 고등학교 TOP20에 {st.session_state.selected_gungu}는 총 {count}개 있습니다."
             st.text_area("📝 명문 고등학교 평가", value=default_text)
 
 

@@ -14,7 +14,7 @@ class PlaceSearcher:
         self.api_key = api_key
         self.categories = {
             "백화점": {"query": "백화점", "allowed_names": ["신세계백화점", "롯데백화점", "현대백화점"]},
-            "대형마트": {"query": None, "category_code": "MT1", "allowed_names": ["롯데마트", "메가마트", "이케아", "가정,생활 > 대형마트 > 이마트", "가정,생활 > 대형마트 > 홈플러스", "코스트코", "트레이더스 홀세일 클럽"]},
+            "대형마트": {"query": None, "category_code": "MT1", "allowed_names": ["롯데마트", "메가마트", "이케아", "가정,생활 > 대형마트 > 이마트", "가정,생활 > 대형마트 > 홈플러스", "코스트코", "트레이더스 홀세일 클럽", "스타필드"]},
             "종합병원": {"query": "종합병원", "allowed_names": None},
             "스타벅스": {"query": "스타벅스", "allowed_names": None},
             "문화시설": {"query": None, "category_code": "CT1", "allowed_names": None},
